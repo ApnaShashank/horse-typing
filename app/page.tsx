@@ -110,8 +110,8 @@ function HeroDemo() {
           </span>
         </div>
 
-        {/* text display – grows, clipped cleanly */}
-        <div className="px-6 py-5 font-mono flex-1" style={{ minHeight: 0, overflow: 'hidden' }}>
+        {/* text display – fixed height to prevent layout shift */}
+        <div className="px-6 py-5 font-mono flex-1 min-h-[200px] lg:min-h-[220px]" style={{ overflow: 'hidden' }}>
           <div className="text-[15px] font-semibold tracking-wide" style={{ lineHeight: '2', wordBreak: 'break-word' }}>
             {text.split('').map((ch, i) => (
               <span key={i} className={isInTypoMode && i >= errorStart ? 'text-error bg-error/10' : 'text-correct'}>{ch}</span>
@@ -122,7 +122,7 @@ function HeroDemo() {
               className="inline-block w-[2px] h-[1em] bg-primary ml-0.5 align-middle"
             />
             <span className="text-on-surface-variant/8">
-              {(phase === 2 ? fullText : phase === 0 ? typoText : fullText).slice(text.length)}
+              {fullText.slice(text.length)}
             </span>
           </div>
         </div>
