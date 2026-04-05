@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #111111;
+  --color-main: #888888;
+  --color-sub: #444444;
+  --color-text: #e0e0e0;
+  --color-error: #ff5252;
+  --color-correct: #81c784;
+  
+  --color-on-surface: #e0e0e0;
+  --color-on-surface-variant: #666666;
+  --color-primary: #999999;
+  --color-primary-dim: #555555;
+  --color-error-dim: #702020;
+
+  --color-surface-container-low: #181818;
+  --color-surface-container: #1c1c1c;
+  --color-surface-container-high: #242424;
+  --color-surface-container-highest: #2c2c2c;
+
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+}
+
+@layer base {
+  body {
+    background-color: #111111;
+    background-image: 
+      linear-gradient(to right, #1a1a1a 1px, transparent 1px),
+      linear-gradient(to bottom, #1a1a1a 1px, transparent 1px);
+    background-size: 40px 40px;
+    color: #e0e0e0;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Caret Styling - Sharp Technical Look */
+.caret {
+  @apply absolute w-[2px] bg-primary z-10;
+  box-shadow: none; /* No Neon Glow */
+  pointer-events: none;
+  transition: transform 0.1s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.caret-instant {
+  transition: none !important;
+}
+
+.caret-blink {
+  animation: caret-blink 1s steps(2, start) infinite;
+}
+
+@keyframes caret-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+::selection {
+  background: rgba(255, 255, 255, 0.1);
+  color: inherit;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Sharp Corners and Border Utility */
+.grid-box {
+  @apply border border-white/10 rounded-[2px] bg-background/50 backdrop-blur-sm;
+}
+
+.grid-lines-hero {
+   background-image: 
+    linear-gradient(to right, #ffffff05 1px, transparent 1px),
+    linear-gradient(to bottom, #ffffff05 1px, transparent 1px);
+   background-size: 20px 20px;
+}
+
+

@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+
+  testResults  TestResult[]
+  userStat     UserStat?
+  mistakes     Mistake[]
+  customTexts  CustomText[]
+  leaderboards Leaderboard[]
+}
+
+model TestResult {
+  id         String   @id @default(uuid())
+  userId     String
+  mode       String   // time, words, quote, zen, custom
+  duration   Int      // in seconds
+  wordCount  Int
+  wpm        Int
+  accuracy   Int      // percentage 0-100
+  mistakes   Int
+  rawSpeed   Int
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserStat {
+  userId         String @id
+  avgWpm         Float  @default(0)
+  bestWpm        Int    @default(0)
+  avgAccuracy    Float  @default(0)
+  totalTests     Int    @default(0)
+  totalTimeSpent Int    @default(0) // in seconds
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Mistake {
+  id         String @id @default(uuid())
+  userId     String
+  keyPressed String
+  count      Int    @default(1)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // A combination of user and key should be unique for easy upserting
+  @@unique([userId, keyPressed])
+}
+
+model CustomText {
+  id        String   @id @default(uuid())
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Leaderboard {
+  id        String   @id @default(uuid())
+  userId    String
+  wpm       Int
+  accuracy  Int
+  mode      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Keep an index for fast querying of top scores
+  @@index([wpm(sort: Desc), accuracy(sort: Desc)])
+}
+
+model WordPool {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  words     String[]
+  category  String?
+  language  String   @default("english")
+  createdAt DateTime @default(now())
+}
