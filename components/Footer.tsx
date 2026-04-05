@@ -1,6 +1,6 @@
 'use client';
 
-import { Type, Twitter, Mail, ExternalLink, Shield, Lock, Globe, ChevronRight, X as XIcon } from 'lucide-react';
+import { Type, Mail, ExternalLink, Shield, Lock, Globe, ChevronRight, X as XIcon } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Footer() {
