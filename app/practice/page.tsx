@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useRef, useEffect, useLayoutEffect, useMemo, memo, useCallback } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, useMemo, memo } from 'react';
 import { useTypingEngine } from './useTypingEngine';
 import { GenerationOptions } from './words';
 import {
   Clock, Type, Quote, Mountain, Wrench, X, Play, RotateCcw,
-  Settings2, ChevronRight, AlertTriangle, Zap, Target, BarChart3,
-  Flame, RefreshCw, CheckCircle2, TrendingUp
+  Settings2, BarChart3, RefreshCw, TrendingUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -104,7 +103,7 @@ export default function Practice() {
   const {
     status, words, typedHistory, currentWordInput, activeWordIndex,
     timeRemaining, timeElapsed, wpm, raw, accuracy,
-    correctChars, incorrectChars, extraChars, missedChars, consistency,
+    correctChars, incorrectChars, extraChars, consistency,
     options, wpmHistory, quoteSource, handleTyping, initializeEngine,
   } = useTypingEngine({
     mode: 'time',
@@ -133,7 +132,7 @@ export default function Practice() {
     const charSpans = activeSpan.querySelectorAll('.char');
     const currentCharSpan = charSpans[currentWordInput.length] as HTMLElement;
     let x = activeSpan.offsetLeft;
-    let y = activeSpan.offsetTop + 6;
+    const y = activeSpan.offsetTop + 6;
 
     if (currentWordInput.length > 0) {
       if (currentCharSpan) {
@@ -206,11 +205,6 @@ export default function Practice() {
     };
   }, [wpmHistory]);
 
-  const topWeakKeys = useMemo(() => {
-    if (!wpmHistory.length) return [];
-    const map: Record<string, number> = {};
-    return Object.entries(map).sort(([, a], [, b]) => b - a).slice(0, 6);
-  }, [wpmHistory]);
 
   // ── FINISHED SCREEN ─────────────────────────────────────────────
   if (status === 'finished') {

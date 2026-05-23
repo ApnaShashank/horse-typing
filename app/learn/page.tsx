@@ -4,9 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, ChevronRight, ChevronDown, Lock, Check,
-  Star, Zap, Flame, Trophy, Target, BarChart3, Keyboard, Play, Menu, X
+  Zap, Flame, Trophy, Keyboard, Play, Menu, X
 } from 'lucide-react';
-import Link from 'next/link';
 import { LESSONS, DIFFICULTY_GROUPS, getDifficultyColor, type Difficulty, type Lesson } from './lessonData';
 import LearnEngine, { type LessonResult } from './LearnEngine';
 
@@ -45,7 +44,7 @@ function updateStreak(): StreakData {
   const today = new Date().toDateString();
   const s = loadStreak();
   const yesterday = new Date(Date.now() - 864e5).toDateString();
-  let newCount = s.lastDate === today ? s.count : s.lastDate === yesterday ? s.count + 1 : 1;
+  const newCount = s.lastDate === today ? s.count : s.lastDate === yesterday ? s.count + 1 : 1;
   const updated: StreakData = { count: newCount, lastDate: today };
   localStorage.setItem(STREAK_KEY, JSON.stringify(updated));
   return updated;
@@ -344,8 +343,11 @@ export default function LearnPage() {
 
   // Load from localStorage on mount
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setProgress(loadProgress());
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTotalXP(loadXP());
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setStreak(loadStreak());
   }, []);
 

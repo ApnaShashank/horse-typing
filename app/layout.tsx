@@ -4,7 +4,6 @@ import "./globals.css";
 import "./fonts.css";
 import Navbar from "@/components/Navbar";
 import ConditionalFooter from "@/components/ConditionalFooter";
-import Footer from "@/components/Footer";
 
 const manrope = Manrope({
   variable: "--font-manrope",

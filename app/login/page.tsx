@@ -130,7 +130,7 @@ export default function Login() {
 
           <div className="mt-8 pt-6 border-t border-white/5 flex flex-col items-center gap-4">
             <p className="text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-wider">
-              Don't have an account? <Link href="/register" className="text-primary hover:text-primary-dim transition-colors ml-1">Create account</Link>
+              Don&apos;t have an account? <Link href="/register" className="text-primary hover:text-primary-dim transition-colors ml-1">Create account</Link>
             </p>
             <Link href="/practice" className="text-[9px] font-bold text-on-surface-variant/20 hover:text-on-surface-variant/40 uppercase tracking-widest transition-colors">
               Back to Practice Module
