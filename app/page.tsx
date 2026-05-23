@@ -1,569 +1,605 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { 
-  Zap, Activity, Cpu, Layout, Target, Layers, 
-  ChevronRight, ArrowRight, MousePointer2, Type, 
-  Terminal, ShieldCheck, Gauge, Database, DatabaseBackup, BarChart3, RotateCw 
+import { motion, useInView, useScroll, useTransform } from "framer-motion";
+import {
+  ArrowRight, Trophy, BarChart3, Zap, Target, Users, Clock, CheckCircle, ChevronDown
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 
-// ─── Full Keyboard Layout ───────────────────────────────────────
-const KB_ROWS: string[][] = [
-  ['`','1','2','3','4','5','6','7','8','9','0','-','='],
-  ['q','w','e','r','t','y','u','i','o','p','[',']'],
-  ['a','s','d','f','g','h','j','k','l',';',"'"],
-  ['z','x','c','v','b','n','m',',','.','/'],
+// ─── Live Typing Demo ─────────────────────────────────────────────
+const DEMO_WORDS = [
+  { text: "the", correct: true },
+  { text: "quick", correct: true },
+  { text: "brown", correct: true },
+  { text: "fox", correct: true },
+  { text: "jumps", correct: false },
+  { text: "over", correct: true },
+  { text: "the", correct: true },
+  { text: "lazy", correct: true },
 ];
 
-function VirtualKey({ label, active, wide, extraWide }: {
-  label: string; active: boolean; wide?: boolean; extraWide?: boolean;
-}) {
-  return (
-    <motion.div
-      animate={active
-        ? { scale: 0.88, backgroundColor: 'var(--color-primary)' }
-        : { scale: 1, backgroundColor: 'rgba(255,255,255,0.02)' }
-      }
-      transition={{ duration: 0.08 }}
-      className={`
-        relative flex items-center justify-center rounded-sm border font-bold select-none
-        text-[9px] uppercase tracking-wide h-7
-        ${extraWide ? 'min-w-[50px]' : wide ? 'min-w-[34px]' : 'min-w-[24px]'}
-        px-1
-        ${active
-          ? 'border-primary text-background shadow-md shadow-primary/25'
-          : 'border-white/8 text-on-surface-variant/25'
-        }
-      `}
-    >
-      {label}
-    </motion.div>
-  );
-}
-
-// ─── Main Hero Demo (typing + keyboard synced) ──────────────────
-function HeroDemo() {
-  const [text, setText] = useState('');
-  const [phase, setPhase] = useState(0);
-  const [activeKey, setActiveKey] = useState<string>('');
-
-  const fullText = 'the quick brown fox jumps over the lazy dog and the swift coder never lets a single keystroke go to waste in the pursuit of mastery and speed is the art of precision under pressure every character counts and every second sharpens the blade';
-  const typoText  = 'the quick borwn fox';
-
-  function flashKey(key: string) {
-    setActiveKey(key);
-    setTimeout(() => setActiveKey(''), 100);
-  }
+function TypingPreview() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [wpm, setWpm] = useState(0);
+  const [acc, setAcc] = useState(100);
 
   useEffect(() => {
-    let t: NodeJS.Timeout;
-    if (phase === 0) {
-      if (text.length < typoText.length) {
-        t = setTimeout(() => {
-          const ch = typoText[text.length];
-          flashKey(ch === ' ' ? 'space' : ch);
-          setText(typoText.slice(0, text.length + 1));
-        }, 170);
-      } else {
-        t = setTimeout(() => setPhase(1), 1200);
-      }
-    } else if (phase === 1) {
-      if (text.length > 10) {
-        t = setTimeout(() => {
-          flashKey('⌫');
-          setText(prev => prev.slice(0, -1));
-        }, 120);
-      } else {
-        setPhase(2);
-      }
-    } else if (phase === 2) {
-      if (text.length < fullText.length) {
-        t = setTimeout(() => {
-          const ch = fullText[text.length];
-          flashKey(ch === ' ' ? 'space' : ch);
-          setText(fullText.slice(0, text.length + 1));
-        }, 130);
-      } else {
-        t = setTimeout(() => { setPhase(0); setText(''); }, 5000);
-      }
-    }
-    return () => clearTimeout(t);
-  }, [text, phase]);
-
-  const isInTypoMode = phase === 0 || phase === 1;
-  const errorStart = 10;
+    const interval = setInterval(() => {
+      setActiveIndex(i => {
+        const next = (i + 1) % DEMO_WORDS.length;
+        setWpm(v => Math.min(142, v + Math.floor(Math.random() * 4)));
+        setAcc(98 + Math.floor(Math.random() * 2));
+        return next;
+      });
+    }, 550);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <div className="w-full flex flex-col gap-3 h-full">
-      {/* ── Typing Box – takes all available space ── */}
-      <div className="grid-box border-white/8 p-0 flex flex-col flex-1 min-h-0" style={{ background: 'rgba(0,0,0,0.35)' }}>
-        {/* top bar */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-white/5 shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/50">Demo · Time 30s</span>
-          </div>
-          <span className={`text-[9px] font-bold uppercase tracking-widest ${isInTypoMode ? 'text-error/60' : 'text-correct/60'}`}>
-            {isInTypoMode ? '! error detected' : '∼ 72 wpm'}
-          </span>
+    <div className="relative rounded-2xl border border-white/8 bg-[#0e0e0e] overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-3 border-b border-white/5">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/50">Live · Time 30s</span>
         </div>
-
-        {/* text display – fixed height to prevent layout shift */}
-        <div className="px-6 py-5 font-mono flex-1 min-h-[200px] lg:min-h-[220px]" style={{ overflow: 'hidden' }}>
-          <div className="text-[15px] font-semibold tracking-wide" style={{ lineHeight: '2', wordBreak: 'break-word' }}>
-            {text.split('').map((ch, i) => (
-              <span key={i} className={isInTypoMode && i >= errorStart ? 'text-error bg-error/10' : 'text-correct'}>{ch}</span>
-            ))}
-            <motion.span
-              animate={{ opacity: [1, 0, 1] }}
-              transition={{ duration: 0.75, repeat: Infinity }}
-              className="inline-block w-[2px] h-[1em] bg-primary ml-0.5 align-middle"
-            />
-            <span className="text-on-surface-variant/8">
-              {fullText.slice(text.length)}
-            </span>
-          </div>
-        </div>
-
-        {/* stats bar */}
-        <div className="flex items-center gap-6 px-5 py-3 border-t border-white/5 shrink-0" style={{ background: 'rgba(255,255,255,0.01)' }}>
-          {[{ l: 'WPM', v: phase === 2 && text.length > 20 ? '68' : '—' },
-            { l: 'ACC', v: phase === 2 ? '96%' : '—' },
-            { l: 'RAW', v: '—' }].map(s => (
-            <div key={s.l} className="flex items-baseline gap-1.5">
-              <span className="text-[9px] font-bold text-on-surface-variant/20 uppercase tracking-widest">{s.l}</span>
-              <span className="text-sm font-black text-on-surface-variant/50">{s.v}</span>
-            </div>
-          ))}
-          <div className="ml-auto text-[9px] font-bold text-on-surface-variant/10 uppercase tracking-widest">TAB · RESTART</div>
-        </div>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-correct/60">{wpm} wpm</span>
       </div>
 
-      {/* ── Virtual Keyboard ── */}
-      <div className="w-full overflow-x-auto no-scrollbar flex justify-center">
-        <div className="grid-box bg-black/20 border-white/5 px-3 py-3 flex flex-col items-center gap-1.5 scale-[0.75] sm:scale-90 md:scale-100 origin-center my-[-15px] sm:my-0 min-w-fit">
-          {/* Row 0: ` 1 2 ... 0 - = + ⌫ */}
-          <div className="flex gap-1">
-            {KB_ROWS[0].map(key => (
-              <VirtualKey key={key} label={key} active={activeKey === key} />
-            ))}
-            <VirtualKey label="⌫" active={activeKey === '⌫'} wide />
-          </div>
-
-          {/* Row 1: Tab + q...] */}
-          <div className="flex gap-1">
-            <VirtualKey label="tab" active={false} wide />
-            {KB_ROWS[1].map(key => (
-              <VirtualKey key={key} label={key} active={activeKey === key} />
-            ))}
-          </div>
-
-          {/* Row 2: Caps + a...'; */}
-          <div className="flex gap-1">
-            <VirtualKey label="caps" active={false} wide />
-            {KB_ROWS[2].map(key => (
-              <VirtualKey key={key} label={key} active={activeKey === key} />
-            ))}
-            <VirtualKey label="enter" active={false} wide />
-          </div>
-
-          {/* Row 3: Shift + z.../ + ⌫ */}
-          <div className="flex gap-1">
-            <VirtualKey label="shift" active={false} extraWide />
-            {KB_ROWS[3].map(key => (
-              <VirtualKey key={key} label={key} active={activeKey === key} />
-            ))}
-            <VirtualKey label="shift" active={false} extraWide />
-          </div>
-
-          {/* Space row */}
-          <div className="flex gap-1 items-center">
-            <VirtualKey label="ctrl" active={false} wide />
-            <VirtualKey label="alt" active={false} wide />
-            <motion.div
-              animate={activeKey === 'space'
-                ? { scale: 0.93, backgroundColor: 'var(--color-primary)' }
-                : { scale: 1, backgroundColor: 'rgba(255,255,255,0.02)' }
-              }
-              transition={{ duration: 0.08 }}
-              className={`h-7 flex-1 rounded-sm border font-bold text-[9px] uppercase tracking-widest flex items-center justify-center select-none
-                ${activeKey === 'space'
-                  ? 'border-primary text-background shadow-md shadow-primary/25'
-                  : 'border-white/8 text-on-surface-variant/15'
-                }`}
+      {/* Words */}
+      <div className="px-6 py-6 min-h-[100px] flex flex-wrap gap-2">
+        {DEMO_WORDS.map((word, i) => {
+          const state = i < activeIndex ? (word.correct ? 'correct' : 'error') : i === activeIndex ? 'active' : 'pending';
+          return (
+            <span
+              key={i}
+              className={`text-base font-mono transition-all duration-200 ${
+                state === 'correct' ? 'text-correct' :
+                state === 'error' ? 'text-error line-through' :
+                state === 'active' ? 'text-on-surface border-b-2 border-primary' :
+                'text-on-surface-variant/30'
+              }`}
             >
-              space
-            </motion.div>
-            <VirtualKey label="alt" active={false} wide />
-            <VirtualKey label="ctrl" active={false} wide />
+              {word.text}
+            </span>
+          );
+        })}
+      </div>
+
+      {/* Stats Bar */}
+      <div className="flex items-center gap-6 px-5 py-3 border-t border-white/5 bg-white/[0.01]">
+        {[
+          { label: 'WPM', value: wpm },
+          { label: 'ACC', value: `${acc}%` },
+          { label: 'TIME', value: '30s' },
+        ].map(s => (
+          <div key={s.label} className="flex items-baseline gap-1.5">
+            <span className="text-[9px] font-bold text-on-surface-variant/30 uppercase tracking-widest">{s.label}</span>
+            <span className="text-sm font-black text-on-surface/70 font-mono">{s.value}</span>
           </div>
-        </div>
+        ))}
+        <div className="ml-auto text-[9px] font-bold text-on-surface-variant/15 uppercase tracking-widest">Tab · Restart</div>
       </div>
     </div>
   );
 }
 
-export default function Home() {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.2, delayChildren: 0.3 }
-    }
-  };
+// ─── Counter animation ────────────────────────────────────────────
+function Counter({ to, suffix = '' }: { to: number; suffix?: string }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
-  };
+  useEffect(() => {
+    if (!inView) return;
+    let start = 0;
+    const step = Math.ceil(to / 60);
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= to) { setCount(to); clearInterval(timer); return; }
+      setCount(start);
+    }, 16);
+    return () => clearInterval(timer);
+  }, [inView, to]);
+
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
+}
+
+// ─── Main Component ───────────────────────────────────────────────
+export default function Home() {
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
+  const heroY = useTransform(scrollYProgress, [0, 0.6], [0, -60]);
 
   const features = [
-    { 
-      icon: <Database className="w-5 h-5" />, 
-      title: "Edge Word Pools", 
-      desc: "Globally distributed datasets powered by Supabase for a diverse, low-latency typing experience." 
+    {
+      icon: <BarChart3 className="w-5 h-5" />,
+      title: "Track every test",
+      desc: "Your WPM, accuracy, and consistency are logged automatically. See your progress chart from day one.",
     },
-    { 
-      icon: <RotateCw className="w-5 h-5" />, 
-      title: "Dynamic Streaming", 
-      desc: "Proprietary text-replenishing engine that sanitizes and randomizes word sets in real-time." 
+    {
+      icon: <Target className="w-5 h-5" />,
+      title: "Practice what you miss",
+      desc: "We track which keys you mistype most and show you drills that target exactly those weak spots.",
     },
-    { 
-      icon: <BarChart3 className="w-5 h-5" />, 
-      title: "Performance Intel", 
-      desc: "Deep-level tracking of consistency, heatmaps, and key-by-key latency archived via Prisma." 
+    {
+      icon: <Trophy className="w-5 h-5" />,
+      title: "Compete on the leaderboard",
+      desc: "Your best scores appear on the global rankings. Every real score is verified and only your personal best counts.",
     },
-    { 
-      icon: <Layout className="w-5 h-5" />, 
-      title: "Surgical Interface", 
-      desc: "A distraction-free viewport optimized for sub-pixel alignment and maximum focusing range." 
+    {
+      icon: <Zap className="w-5 h-5" />,
+      title: "Multiple modes",
+      desc: "Choose from timed tests (15s, 30s, 60s), word count modes, quotes, or paste in your own custom text.",
     },
-    { 
-      icon: <Target className="w-5 h-5" />, 
-      title: "Domain Selection", 
-      desc: "Choose from 10,000+ words across specialized pools like Technical, Literature, and Code." 
+    {
+      icon: <Users className="w-5 h-5" />,
+      title: "Free account, all features",
+      desc: "Create an account to save history and appear on rankings. No paywall, no upsell — everything is free.",
     },
-    { 
-      icon: <ShieldCheck className="w-5 h-5" />, 
-      title: "Verified Ranking", 
-      desc: "A secured session validation system where every high score is verified and globally indexed." 
+    {
+      icon: <Clock className="w-5 h-5" />,
+      title: "Learn from scratch",
+      desc: "New to touch typing? The Learn section walks you through home row keys step by step, building real muscle memory.",
     },
   ];
 
+  const stats = [
+    { value: 42000, suffix: '+', label: 'Typists registered' },
+    { value: 1200000, suffix: '+', label: 'Tests completed' },
+    { value: 142, suffix: ' WPM', label: 'All-time top score' },
+    { value: 99, suffix: '%', label: 'Uptime this year' },
+  ];
+
+  const steps = [
+    { n: '01', title: 'Pick your mode', desc: 'Choose from timed test, word count, quote mode, or paste your own text. Start in under 5 seconds.' },
+    { n: '02', title: 'Start typing', desc: 'The test begins on your first keystroke. Real-time WPM and accuracy update as you go.' },
+    { n: '03', title: 'Review and improve', desc: 'See your results, weak keys, and WPM trend. Every test moves you forward.' },
+  ];
+
+  const faqs = [
+    { q: "Do I need an account to practice?", a: "No. You can start a test immediately without signing up. An account is only needed to save your history and appear on the leaderboard." },
+    { q: "How is WPM calculated?", a: "We use the standard definition: one word equals five characters. Your WPM is your net speed after deducting errors from raw speed." },
+    { q: "Can I practice with my own text?", a: "Yes. Switch to Custom mode in the practice page and paste anything you want — code, prose, notes, anything." },
+    { q: "How does the leaderboard work?", a: "Only your personal best score per mode appears on the global board. You won't flood the ranking with every test you take." },
+  ];
+
   return (
-    <div className="font-mono text-on-surface overflow-x-hidden">
-      {/* ─── Hero Section ───────────────────────────────────────── */}
-      <section className="relative mt-16 min-h-[calc(100vh-64px)] flex flex-col justify-center overflow-hidden">
+    <div className="text-on-surface overflow-x-hidden">
 
-        {/* Grid bg */}
-        <div className="absolute inset-0 -z-10 pointer-events-none" style={{
-          backgroundImage: 'linear-gradient(to right,#ffffff03 1px,transparent 1px),linear-gradient(to bottom,#ffffff03 1px,transparent 1px)',
-          backgroundSize: '48px 48px'
-        }} />
-        <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[500px] h-[700px] bg-primary/5 rounded-full blur-[120px] -z-10" />
-        <div className="absolute top-1/3 left-0 w-[350px] h-[350px] bg-primary/3 rounded-full blur-[100px] -z-10" />
+      {/* ─── Hero ──────────────────────────────────────────────── */}
+      <section ref={heroRef} className="relative min-h-screen flex items-center pt-16 overflow-hidden">
+        {/* Background */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(150,150,150,0.08) 0%, transparent 60%)'
+          }} />
+          <div className="absolute inset-0" style={{
+            backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.025) 1px, transparent 1px)',
+            backgroundSize: '60px 60px'
+          }} />
+        </div>
 
-        <div className="w-full max-w-[1280px] mx-auto px-6 sm:px-10 lg:px-16 py-10 flex flex-col h-full">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.25fr] gap-10 xl:gap-14 h-full items-center">
+        <motion.div
+          style={{ opacity: heroOpacity, y: heroY }}
+          className="max-w-7xl mx-auto px-6 lg:px-10 w-full py-24"
+        >
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            {/* Left */}
+            <div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/3 mb-8"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-correct animate-pulse" />
+                <span className="text-[11px] font-semibold text-on-surface-variant/70 tracking-wider">Free · No ads · Open rankings</span>
+              </motion.div>
 
+              <motion.h1
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="text-5xl md:text-6xl xl:text-7xl font-black tracking-tight leading-[1.0] mb-6 font-headline"
+              >
+                Get faster<br />
+                <span className="text-primary">at the keyboard.</span>
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="text-base md:text-lg text-on-surface-variant/60 leading-relaxed mb-10 max-w-lg"
+              >
+                Horse Typing is a clean, no-distraction typing trainer. Take timed tests, track your progress over time, and see where you stand against other typists worldwide.
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="flex flex-wrap items-center gap-4"
+              >
+                <Link
+                  href="/practice"
+                  className="group flex items-center gap-2.5 px-6 py-3.5 bg-primary/10 border border-primary/30 hover:bg-primary/20 hover:border-primary/60 rounded-lg text-sm font-bold text-primary transition-all duration-200"
+                >
+                  Start typing
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <Link
+                  href="/leaderboard"
+                  className="flex items-center gap-2 px-6 py-3.5 border border-white/10 hover:border-white/20 hover:bg-white/4 rounded-lg text-sm font-semibold text-on-surface-variant/60 hover:text-on-surface-variant transition-all duration-200"
+                >
+                  <Trophy className="w-4 h-4" />
+                  See rankings
+                </Link>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+                className="flex items-center gap-6 mt-10 pt-8 border-t border-white/5"
+              >
+                {[
+                  { value: '15s / 30s / 60s', label: 'Timed modes' },
+                  { value: 'Free', label: 'No account needed' },
+                  { value: 'Real-time', label: 'Live WPM tracking' },
+                ].map(s => (
+                  <div key={s.label}>
+                    <div className="text-sm font-black text-on-surface/80">{s.value}</div>
+                    <div className="text-[10px] text-on-surface-variant/40 uppercase tracking-wider mt-0.5">{s.label}</div>
+                  </div>
+                ))}
+              </motion.div>
+            </div>
+
+            {/* Right - Live demo */}
             <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7 }}
-              className="text-left flex flex-col"
+              initial={{ opacity: 0, x: 24 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
             >
-              {/* Headline */}
-              <h1 className="font-black uppercase tracking-tighter leading-[0.9] mb-6 text-on-surface">
-                <span className="block text-[clamp(2rem,4.5vw,3.5rem)] whitespace-nowrap">Type Faster.</span>
-                <span className="block text-[clamp(2rem,4.5vw,3.5rem)] whitespace-nowrap"><span className="text-primary">Score</span> Higher.</span>
-                <span className="block text-[clamp(2rem,4.5vw,3.5rem)] whitespace-nowrap"><span className="text-on-surface-variant/25 italic">Rank</span> First.</span>
-              </h1>
+              <TypingPreview />
+              <div className="mt-4 flex items-center justify-center gap-2 text-[10px] text-on-surface-variant/30 uppercase tracking-widest font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-correct/50" />
+                Live preview — click the practice page to type for real
+              </div>
+            </motion.div>
+          </div>
 
-              <div className="w-20 h-px bg-primary/40 mb-7" />
+          {/* Scroll cue */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.2 }}
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-on-surface-variant/20"
+          >
+            <span className="text-[9px] uppercase tracking-widest font-bold">Scroll</span>
+            <motion.div animate={{ y: [0, 5, 0] }} transition={{ repeat: Infinity, duration: 1.5 }}>
+              <ChevronDown className="w-4 h-4" />
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      </section>
 
-              <p className="text-[15px] font-medium text-on-surface-variant/45 leading-[1.8] max-w-[440px] mb-10">
-                Horse Typing is a precision-engineered speed training platform.
-                Train with 10,000+ curated word pools, track WPM history, and compete
-                on a live global leaderboard — all in a premium, distraction-free interface.
-              </p>
+      {/* ─── Stats Strip ───────────────────────────────────────── */}
+      <section className="border-y border-white/5 bg-surface-container-low/40 py-12">
+        <div className="max-w-7xl mx-auto px-6 lg:px-10 grid grid-cols-2 md:grid-cols-4 gap-8">
+          {stats.map((s, i) => (
+            <motion.div
+              key={s.label}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08 }}
+              className="text-center"
+            >
+              <div className="text-3xl md:text-4xl font-black text-on-surface mb-1 font-['Manrope']">
+                <Counter to={s.value} suffix={s.suffix} />
+              </div>
+              <div className="text-xs text-on-surface-variant/40 uppercase tracking-widest font-semibold">{s.label}</div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
 
-              {/* CTA Buttons */}
-              <div className="flex flex-wrap gap-4">
-                {/* Primary — glowing gradient */}
-                <Link href="/practice" className="group relative overflow-hidden flex items-center gap-3 px-9 py-4 text-[11px] font-black uppercase tracking-[0.4em] transition-all duration-300">
-                  {/* border */}
-                  <span className="absolute inset-0 border border-primary/50 group-hover:border-primary transition-colors duration-300" />
-                  {/* bg glow */}
-                  <span className="absolute inset-0 bg-primary/12 group-hover:bg-primary/25 transition-colors duration-300" />
-                  {/* shimmer on hover */}
-                  <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-linear-to-r from-transparent via-primary/20 to-transparent" />
-                  <span className="relative text-primary">Start Typing</span>
-                  <ChevronRight className="relative w-4 h-4 text-primary group-hover:translate-x-1 transition-transform duration-200" />
-                </Link>
+      {/* ─── Features ──────────────────────────────────────────── */}
+      <section className="max-w-7xl mx-auto px-6 lg:px-10 py-28">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-16 max-w-xl"
+        >
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary/70 mb-4">What you get</p>
+          <h2 className="text-4xl md:text-5xl font-black tracking-tight font-['Manrope'] mb-5">
+            Built to help you improve faster.
+          </h2>
+          <p className="text-on-surface-variant/50 text-base leading-relaxed">
+            Everything you need is here — no paid plans, no feature gating, no email required to start.
+          </p>
+        </motion.div>
 
-                {/* Secondary — border glow fill */}
-                <Link href="/leaderboard" className="group relative overflow-hidden flex items-center gap-3 px-9 py-4 text-[11px] font-bold uppercase tracking-[0.4em] transition-all duration-300">
-                  <span className="absolute inset-0 border border-white/8 group-hover:border-white/25 transition-colors duration-300" />
-                  <span className="absolute inset-0 bg-transparent group-hover:bg-white/5 transition-colors duration-300" />
-                  <span className="relative text-on-surface-variant/50 group-hover:text-on-surface-variant/80 transition-colors duration-200">Leaderboard</span>
-                  <Trophy className="relative w-4 h-4 opacity-30 group-hover:opacity-70 transition-opacity duration-200" />
-                </Link>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {features.map((f, i) => (
+            <motion.div
+              key={f.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.06 }}
+              whileHover={{ y: -3, borderColor: 'rgba(153,153,153,0.25)' }}
+              className="group p-7 rounded-xl border border-white/6 bg-surface-container-low/50 hover:bg-surface-container-low transition-all duration-300 cursor-default"
+            >
+              <div className="w-10 h-10 rounded-lg bg-primary/8 border border-primary/15 flex items-center justify-center text-primary mb-5 group-hover:bg-primary/15 transition-colors">
+                {f.icon}
+              </div>
+              <h3 className="text-sm font-bold text-on-surface mb-2">{f.title}</h3>
+              <p className="text-sm text-on-surface-variant/50 leading-relaxed">{f.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── How It Works ──────────────────────────────────────── */}
+      <section className="border-t border-white/5 py-28 relative overflow-hidden">
+        <div className="absolute inset-0 -z-10" style={{
+          backgroundImage: 'radial-gradient(ellipse 60% 50% at 0% 50%, rgba(150,150,150,0.04) 0%, transparent 60%)'
+        }} />
+        <div className="max-w-7xl mx-auto px-6 lg:px-10">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary/70 mb-4">How it works</p>
+              <h2 className="text-4xl md:text-5xl font-black tracking-tight font-['Manrope'] mb-14">
+                Three steps.<br />One goal.
+              </h2>
+              <div className="space-y-10">
+                {steps.map((s, i) => (
+                  <motion.div
+                    key={s.n}
+                    initial={{ opacity: 0, x: -16 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    className="flex gap-6 group"
+                  >
+                    <span className="text-5xl font-black text-white/[0.04] group-hover:text-primary/10 transition-colors leading-none mt-1 select-none">{s.n}</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-on-surface mb-1.5">{s.title}</h4>
+                      <p className="text-sm text-on-surface-variant/50 leading-relaxed">{s.desc}</p>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
             </motion.div>
 
-            {/* ═══ RIGHT: Demo (typing + keyboard) ════════════════ */}
             <motion.div
-              initial={{ opacity: 0, x: 32 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.25 }}
-              className="w-full flex flex-col"
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="space-y-3"
             >
-              <HeroDemo />
-            </motion.div>
+              {/* Mock result card */}
+              <div className="rounded-xl border border-white/8 bg-[#0e0e0e] p-6">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/30 mb-4">Your result — Time 60s</div>
+                <div className="grid grid-cols-3 gap-4 mb-5">
+                  {[
+                    { label: 'WPM', val: '94', color: 'text-primary' },
+                    { label: 'Accuracy', val: '97%', color: 'text-correct' },
+                    { label: 'Raw', val: '101', color: 'text-on-surface/70' },
+                  ].map(m => (
+                    <div key={m.label}>
+                      <div className={`text-3xl font-black ${m.color} font-['Manrope']`}>{m.val}</div>
+                      <div className="text-[10px] text-on-surface-variant/30 uppercase tracking-widest mt-1 font-bold">{m.label}</div>
+                    </div>
+                  ))}
+                </div>
+                {/* Progress bar */}
+                <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    whileInView={{ width: '66%' }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 1.2, delay: 0.3 }}
+                    className="h-full bg-primary/70 rounded-full"
+                  />
+                </div>
+                <p className="text-[10px] text-on-surface-variant/30 mt-2">Faster than 66% of users in this mode</p>
+              </div>
 
+              {/* CTA inside */}
+              <div className="rounded-xl border border-white/6 bg-surface-container-low p-6 flex items-center gap-5">
+                <div className="w-10 h-10 rounded-lg bg-primary/8 border border-primary/15 flex items-center justify-center text-primary shrink-0">
+                  <CheckCircle className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-bold text-on-surface mb-0.5">Save your progress</div>
+                  <p className="text-xs text-on-surface-variant/40 leading-relaxed">Create a free account and every test result is saved permanently to your history.</p>
+                </div>
+                <Link href="/register" className="shrink-0 px-4 py-2 rounded-lg bg-primary/10 border border-primary/25 text-primary text-xs font-bold hover:bg-primary/20 transition-colors">
+                  Sign up free
+                </Link>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Feature Blueprint Grid */}
-      <section className="px-6 md:px-12 max-w-[1250px] mx-auto py-20 border-t border-white/5 relative">
-        <div className="absolute -left-20 top-40 w-80 h-80 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
-        
-        <motion.div 
-          initial={{ opacity: 0, x: -30 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true, margin: "-100px" }}
-          className="mb-24"
-        >
-           <h2 className="text-[12px] font-black text-primary uppercase tracking-[0.6em] mb-6">Feature Infrastructure</h2>
-           <div className="text-5xl md:text-6xl font-black uppercase tracking-tighter">Engineered for Mastery.</div>
-        </motion.div>
-
-        <motion.div 
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1"
-        >
-          {features.map((f, i) => (
-            <motion.div 
-              key={i} 
-              variants={itemVariants}
-              whileHover={{ y: -5, borderColor: "rgba(153, 153, 153, 0.4)" }}
-              className="grid-box border-white/5 p-10 bg-white/2 hover:bg-white/4 transition-colors group cursor-default"
+      {/* ─── Leaderboard Preview ───────────────────────────────── */}
+      <section className="border-t border-white/5 py-28">
+        <div className="max-w-7xl mx-auto px-6 lg:px-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary/70 mb-4">Global rankings</p>
+              <h2 className="text-4xl md:text-5xl font-black tracking-tight font-['Manrope']">
+                Where do you rank?
+              </h2>
+            </div>
+            <Link
+              href="/leaderboard"
+              className="flex items-center gap-2 text-sm font-semibold text-primary/70 hover:text-primary transition-colors"
             >
-              <div className="grid-box w-10 h-10 bg-primary/5 flex items-center justify-center text-primary group-hover:bg-primary/20 group-hover:scale-110 transition-all mb-8">
-                {f.icon}
-              </div>
-              <h3 className="text-sm font-black uppercase tracking-[0.3em] mb-5 text-on-surface/90 group-hover:text-primary transition-colors">{f.title}</h3>
-              <p className="text-[13px] font-bold text-on-surface-variant/40 leading-relaxed uppercase tracking-wider">{f.desc}</p>
-            </motion.div>
-          ))}
-        </motion.div>
-      </section>
+              Full leaderboard <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
 
-      {/* Operations/Process Section */}
-      <section className="px-6 md:px-12 max-w-[1250px] mx-auto py-40 border-t border-white/5">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
-           <motion.div 
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 1 }}
-              viewport={{ once: true }}
-              className="space-y-16"
-           >
-              <div className="space-y-6">
-                 <h2 className="text-[12px] font-black text-primary uppercase tracking-[0.6em] mb-6">Training Workflow</h2>
-                 <div className="text-5xl md:text-6xl font-black uppercase tracking-tighter leading-tight">The 3 Phases of Evolution.</div>
-              </div>
-              
-              <div className="space-y-16">
-                 {[
-                   { step: "0.1", t: "Context Selection", d: "Initialize your session by choosing from curated word domains across our edge database." },
-                   { step: "0.2", t: "Active Execution", d: "Experience zero-lag input processing with our hyper-responsive technical viewport." },
-                   { step: "0.3", t: "Metric Extraction", d: "Analyze granular performance data and weak keys archived for professional review." },
-                 ].map(s => (
-                   <motion.div 
-                      key={s.step} 
-                      whileHover={{ x: 10 }}
-                      className="flex gap-12 group"
-                   >
-                      <span className="text-5xl md:text-6xl font-black text-white/[0.05] group-hover:text-primary/20 transition-colors">{s.step}</span>
-                      <div className="pt-3">
-                        <h4 className="text-sm font-black uppercase tracking-[0.3em] mb-4 group-hover:text-on-surface transition-colors">{s.t}</h4>
-                        <p className="text-[13px] font-bold text-on-surface-variant/40 uppercase tracking-widest leading-loose max-w-sm">{s.d}</p>
-                      </div>
-                   </motion.div>
-                 ))}
-              </div>
-           </motion.div>
-           
-           <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1 }}
-              viewport={{ once: true }}
-              className="grid-box border-white/10 aspect-square relative bg-white/5 p-1 group overflow-hidden"
-           >
-              <div className="w-full h-full border border-white/5 bg-background flex items-center justify-center relative overflow-hidden group-hover:border-primary/20 transition-colors">
-                 <div className="absolute inset-0 opacity-10 group-hover:opacity-30 transition-opacity">
-                    <div className="absolute inset-0 grid-lines-hero" />
-                 </div>
-                 <div className="z-10 text-center space-y-6">
-                    <div className="inline-block w-24 h-24 p-0 overflow-hidden bg-primary/5 rounded-full border border-primary/10 group-hover:border-primary/30 transition-colors relative">
-                      <img 
-                        src="https://ik.imagekit.io/DEMOPROJECT/3c470dc2-3a50-4f45-9960-deb3429114e8.png" 
-                        alt="Horse Typing Logo" 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="text-[10px] font-bold text-primary uppercase tracking-[0.4em]">Ready to start training?</div>
-                    <Link href="/register" className="grid-box px-8 py-4 text-[9px] font-black tracking-[0.3em] uppercase border-primary/40 text-primary hover:bg-primary/20 transition-all block">Create Free Account</Link>
-                 </div>
-              </div>
-           </motion.div>
-        </div>
-      </section>
-
-      {/* Global Metadata Section */}
-      <section className="py-40 bg-zinc-950/20 border-t border-white/5 relative overflow-hidden">
-        <div className="max-w-[1250px] mx-auto px-6 md:px-12 grid grid-cols-1 md:grid-cols-3 gap-24 relative z-10">
-           {[ 
-             {l: "Registered Typists", v: "42K+", s: <Activity className="w-4 h-4" />}, 
-             {l: "Input Latency", v: "< 1ms", s: <Zap className="w-4 h-4" />}, 
-             {l: "Tests Completed", v: "1.2M+", s: <DatabaseBackup className="w-4 h-4" />} 
-           ].map((m, i) => (
-             <motion.div 
-                key={m.l} 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                viewport={{ once: true }}
-                whileHover={{ scale: 1.05 }}
-                className="space-y-6 group cursor-default"
-             >
-                <div className="flex items-center gap-4 text-primary mb-2">
-                   {m.s}
-                   <span className="text-[10px] font-black uppercase tracking-[0.4em] opacity-60 group-hover:opacity-100 transition-opacity">{m.l}</span>
-                </div>
-                <span className="text-6xl md:text-7xl font-black text-on-surface tracking-tighter block group-hover:text-primary transition-colors">{m.v}</span>
-                <motion.div 
-                  initial={{ width: 0 }}
-                  whileInView={{ width: "3rem" }}
-                  transition={{ duration: 1, delay: 0.5 }}
-                  className="h-1 bg-primary/40" 
-                />
-             </motion.div>
-           ))}
-        </div>
-      </section>
-
-      {/* Global Leaderboard Preview Section */}
-      <section className="py-32 px-6 bg-zinc-950/40 relative border-t border-white/5">
-         <div className="max-w-[1250px] mx-auto">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 px-4">
-               <div className="space-y-4">
-                  <div className="flex items-center gap-3 text-primary">
-                    <Trophy className="w-5 h-5" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.5em]">Global Rankings</span>
-                  </div>
-                  <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-none text-on-surface">Verified Sessions.</h2>
-               </div>
-               <p className="text-[11px] font-bold text-on-surface-variant/30 uppercase tracking-[0.3em] max-w-sm leading-loose">
-                  Real-time leaderboard from the last 24 hours. Every session is verified and saved to ensure clean competition.
-               </p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="rounded-xl border border-white/8 overflow-hidden"
+          >
+            {/* Header row */}
+            <div className="grid grid-cols-[48px_1fr_80px_80px_100px] gap-4 px-6 py-4 bg-surface-container-low border-b border-white/5 text-[9px] font-black uppercase tracking-[0.3em] text-on-surface-variant/30">
+              <span>#</span>
+              <span>Typist</span>
+              <span className="text-center">WPM</span>
+              <span className="text-center">Acc</span>
+              <span className="text-right">Mode</span>
             </div>
 
-            <motion.div 
-               initial={{ opacity: 0, y: 20 }}
-               whileInView={{ opacity: 1, y: 0 }}
-               viewport={{ once: true }}
-               className="grid-box border-white/5 bg-background overflow-hidden relative"
-            >
-               <div className="absolute inset-0 opacity-[0.02] grid-lines-hero pointer-events-none" />
-               
-               {/* Table Header */}
-               <div className="grid grid-cols-[80px_1fr_100px_100px_120px] gap-4 px-8 py-5 border-b border-white/5 text-[9px] font-black text-on-surface-variant/20 uppercase tracking-[0.4em] bg-white/1">
-                  <span>Rank</span>
-                  <span>Typist</span>
-                  <span className="text-right">WPM</span>
-                  <span className="text-right">ACC</span>
-                  <span className="text-right">Word Pool</span>
-               </div>
+            {[
+              { rank: 1, name: 'WPM_Demon', wpm: 148, acc: 99, mode: '15s', medal: 'text-yellow-500' },
+              { rank: 2, name: 'GhostKey', wpm: 139, acc: 98, mode: '15s', medal: 'text-gray-400' },
+              { rank: 3, name: 'TypeMaster', wpm: 132, acc: 100, mode: '15s', medal: 'text-amber-600' },
+              { rank: 4, name: 'FingerFlow', wpm: 127, acc: 97, mode: '15s', medal: '' },
+              { rank: 5, name: 'SpeedyFinger', wpm: 121, acc: 96, mode: '15s', medal: '' },
+            ].map((row, i) => (
+              <motion.div
+                key={row.rank}
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.06 }}
+                className="grid grid-cols-[48px_1fr_80px_80px_100px] gap-4 px-6 py-4.5 border-b border-white/4 hover:bg-white/[0.015] transition-colors items-center cursor-default"
+              >
+                <span className={`text-sm font-black ${row.medal || 'text-on-surface-variant/30'}`}>{row.rank}</span>
+                <span className="text-sm font-semibold text-on-surface/80 truncate">{row.name}</span>
+                <span className="text-center text-sm font-black text-primary">{row.wpm}</span>
+                <span className="text-center text-sm font-semibold text-on-surface-variant/60">{row.acc}%</span>
+                <span className="text-right text-[10px] font-bold text-on-surface-variant/30 uppercase tracking-wider">{row.mode}</span>
+              </motion.div>
+            ))}
 
-               {/* Table Rows */}
-               {[
-                 { r: "01", user: "0x_Phantom", wpm: "142.4", acc: "99.2", pool: "Kernic_Eng" },
-                 { r: "02", user: "TypeAlchemist", wpm: "138.1", acc: "100.0", pool: "Core_Code" },
-                 { r: "03", user: "SwiftNode", wpm: "135.9", acc: "98.7", pool: "English_1k" },
-                 { r: "04", user: "BinaryGhost", wpm: "132.0", acc: "99.5", pool: "Technical" },
-                 { r: "05", user: "Linear_Flow", wpm: "129.8", acc: "97.4", pool: "English_1k" },
-               ].map((player, i) => (
-                 <motion.div 
-                   key={player.user}
-                   whileHover={{ backgroundColor: "rgba(153, 153, 153, 0.03)" }}
-                   className="grid grid-cols-[80px_1fr_100px_100px_120px] gap-4 px-8 py-6 border-b border-white/5 items-center transition-colors cursor-default"
-                 >
-                    <span className="text-lg font-black text-white/5 group-hover:text-primary/20">{player.r}</span>
-                    <span className="text-xs font-black text-on-surface/80 uppercase tracking-widest">{player.user}</span>
-                    <span className="text-right text-sm font-black text-primary/80 mono">{player.wpm}</span>
-                    <span className="text-right text-xs font-bold text-on-surface-variant/40 mono">{player.acc}%</span>
-                    <div className="flex justify-end">
-                      <span className="text-[9px] px-2 py-1 bg-white/5 border border-white/5 rounded text-on-surface-variant/30 font-bold uppercase">{player.pool}</span>
-                    </div>
-                 </motion.div>
-               ))}
-
-               {/* Table Footer / CTA */}
-               <div className="p-12 text-center bg-white/1 relative">
-                  <div className="space-y-8 max-w-lg mx-auto">
-                     <p className="text-[10px] font-bold text-on-surface-variant/20 uppercase tracking-[0.4em]">Start tracking your typing performance today</p>
-                     <div className="flex flex-col items-center gap-6">
-                        <Link href="/register" className="grid-box bg-primary/10 border-primary/40 text-primary font-black px-12 py-5 text-[11px] uppercase tracking-[0.4em] hover:bg-primary/20 hover:scale-[1.02] active:scale-95 transition-all shadow-xl">
-                           Create Free Account
-                        </Link>
-                        <Link href="/login" className="text-[9px] font-black text-on-surface-variant/30 hover:text-on-surface transition-colors uppercase tracking-[0.4em]">Already have an account? Sign in here</Link>
-                     </div>
-                  </div>
-               </div>
-            </motion.div>
-         </div>
+            <div className="px-6 py-8 text-center bg-surface-container-low/40">
+              <p className="text-sm text-on-surface-variant/40 mb-4">Your best score per mode appears here once you start typing.</p>
+              <div className="flex justify-center gap-3">
+                <Link href="/practice" className="px-5 py-2.5 rounded-lg bg-primary/10 border border-primary/25 text-primary text-xs font-bold hover:bg-primary/20 transition-colors">
+                  Start a test
+                </Link>
+                <Link href="/register" className="px-5 py-2.5 rounded-lg border border-white/10 text-on-surface-variant/60 text-xs font-bold hover:border-white/20 hover:text-on-surface-variant transition-colors">
+                  Create account
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       </section>
 
-      <style jsx global>{`
-        .grid-lines-hero {
-           background-image: 
-            linear-gradient(to right, #ffffff05 1px, transparent 1px),
-            linear-gradient(to bottom, #ffffff05 1px, transparent 1px);
-           background-size: 20px 20px;
-        }
-        .perspective-1000 {
-           perspective: 1000px;
-        }
-      `}</style>
+      {/* ─── FAQ ───────────────────────────────────────────────── */}
+      <section className="border-t border-white/5 py-28">
+        <div className="max-w-3xl mx-auto px-6 lg:px-10">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-14 text-center"
+          >
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary/70 mb-4">Questions</p>
+            <h2 className="text-4xl md:text-5xl font-black tracking-tight font-['Manrope']">Common questions</h2>
+          </motion.div>
+
+          <div className="space-y-3">
+            {faqs.map((faq, i) => (
+              <FAQItem key={i} q={faq.q} a={faq.a} delay={i * 0.06} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── CTA ───────────────────────────────────────────────── */}
+      <section className="border-t border-white/5 py-28">
+        <div className="max-w-7xl mx-auto px-6 lg:px-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="rounded-2xl border border-white/8 bg-surface-container-low/50 p-12 md:p-20 text-center relative overflow-hidden"
+          >
+            <div className="absolute inset-0 -z-0" style={{
+              backgroundImage: 'radial-gradient(ellipse 60% 50% at 50% 100%, rgba(150,150,150,0.05) 0%, transparent 70%)'
+            }} />
+            <div className="relative z-10">
+              <h2 className="text-4xl md:text-6xl font-black tracking-tight font-['Manrope'] mb-5">
+                Ready to type faster?
+              </h2>
+              <p className="text-base text-on-surface-variant/50 max-w-md mx-auto mb-10">
+                No setup. No install. Open the practice page and start your first test in seconds.
+              </p>
+              <div className="flex flex-wrap justify-center gap-4">
+                <Link
+                  href="/practice"
+                  className="group flex items-center gap-2.5 px-8 py-4 bg-primary/10 border border-primary/30 hover:bg-primary/20 hover:border-primary/60 rounded-lg text-sm font-bold text-primary transition-all duration-200"
+                >
+                  Open practice
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <Link
+                  href="/register"
+                  className="flex items-center gap-2 px-8 py-4 border border-white/10 hover:border-white/20 hover:bg-white/4 rounded-lg text-sm font-semibold text-on-surface-variant/60 hover:text-on-surface-variant transition-all duration-200"
+                >
+                  Create free account
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
     </div>
   );
 }
 
-// Separate component for Lucide Trophy to avoid hydration issues if it was missing in scope
-function Trophy({ className }: { className?: string }) {
+// ─── FAQ Accordion Item ───────────────────────────────────────────
+function FAQItem({ q, a, delay }: { q: string; a: string; delay?: number }) {
+  const [open, setOpen] = useState(false);
   return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      width="24" height="24" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className={className}
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay }}
+      className="rounded-xl border border-white/6 overflow-hidden"
     >
-      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 22V18" /><path d="M14 22V18" /><path d="M18 4H6v11a6 6 0 0 0 12 0V4Z" />
-    </svg>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between gap-4 px-6 py-4.5 text-left hover:bg-white/[0.015] transition-colors"
+      >
+        <span className="text-sm font-semibold text-on-surface/90">{q}</span>
+        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }} className="shrink-0 text-on-surface-variant/40">
+          <ChevronDown className="w-4 h-4" />
+        </motion.span>
+      </button>
+      <motion.div
+        initial={false}
+        animate={{ height: open ? 'auto' : 0, opacity: open ? 1 : 0 }}
+        transition={{ duration: 0.25 }}
+        className="overflow-hidden"
+      >
+        <div className="px-6 pb-5 text-sm text-on-surface-variant/55 leading-relaxed border-t border-white/4 pt-4">
+          {a}
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }

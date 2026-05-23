@@ -1,112 +1,103 @@
 'use client';
 
-import { Type, Mail, ExternalLink, Shield, Lock, Globe, ChevronRight, X as XIcon } from 'lucide-react';
 import Link from 'next/link';
+import { Github, Twitter, Mail } from 'lucide-react';
 
 export default function Footer() {
-  const currentYear = new Date().getFullYear();
+  const year = new Date().getFullYear();
 
-  const footerLinks = {
+  const links = {
     product: [
-      { name: 'Practice Engine', href: '/practice' },
-      { name: 'Global Rankings', href: '/leaderboard' },
-      { name: 'Learning Lab', href: '/learn' },
-      { name: 'Word Pools', href: '/practice?mode=words' },
+      { label: 'Practice', href: '/practice' },
+      { label: 'Learn to type', href: '/learn' },
+      { label: 'Rankings', href: '/leaderboard' },
     ],
-    community: [
-      { name: 'GitHub Architecture', href: 'https://github.com' },
-      { name: 'Twitter / X', href: 'https://twitter.com' },
-      { name: 'Developer API', href: '#' },
-      { name: 'Status', href: '#' },
+    account: [
+      { label: 'Create account', href: '/register' },
+      { label: 'Sign in', href: '/login' },
+      { label: 'My stats', href: '/profile' },
     ],
     legal: [
-      { name: 'Terms of Service', href: '#' },
-      { name: 'Privacy Protocol', href: '#' },
-      { name: 'Security Baseline', href: '#' },
-    ]
+      { label: 'Privacy', href: '#' },
+      { label: 'Terms', href: '#' },
+    ],
   };
 
   return (
-    <footer className="w-full bg-background pt-32 pb-16 px-6 lg:px-8 border-t border-white/5 font-mono overflow-hidden relative">
-      {/* Decorative Grid Overlay (Subtle) */}
-      <div className="absolute inset-0 opacity-[0.02] pointer-events-none select-none" 
-           style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-
-      <div className="max-w-[1250px] mx-auto relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-24">
-          
-          {/* Brand Identity Column */}
-          <div className="space-y-8">
-            <Link href="/" className="flex items-center gap-4 group">
-              <div className="grid-box p-0 overflow-hidden w-8 h-8 flex items-center justify-center bg-primary/5 group-hover:bg-primary/10 transition-all border-primary/20">
-                <img 
-                  src="https://ik.imagekit.io/DEMOPROJECT/3c470dc2-3a50-4f45-9960-deb3429114e8.png" 
-                  alt="Horse Typing Logo" 
+    <footer className="border-t border-white/5 bg-[#0c0c0c] pt-16 pb-10 px-6 lg:px-10">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-14">
+          {/* Brand */}
+          <div className="col-span-2 md:col-span-1">
+            <Link href="/" className="flex items-center gap-2.5 group mb-4">
+              <div className="w-7 h-7 rounded-md overflow-hidden border border-white/10 group-hover:border-primary/30 transition-colors">
+                <img
+                  src="https://ik.imagekit.io/DEMOPROJECT/3c470dc2-3a50-4f45-9960-deb3429114e8.png"
+                  alt="Horse Typing"
                   className="w-full h-full object-cover"
                 />
               </div>
-              <span className="text-sm font-black text-on-surface uppercase tracking-[0.4em]">Horse Typing</span>
+              <span className="text-sm font-black text-on-surface tracking-tight">Horse Typing</span>
             </Link>
-            <p className="text-[13px] font-bold text-on-surface-variant/40 uppercase tracking-[0.2em] leading-loose max-w-xs">
-              Surgical precision in every keystroke. 
-              Built with Next.js, Prisma, and Supabase 
-              for the modern editorial elite.
+            <p className="text-sm text-on-surface-variant/40 leading-relaxed mb-6 max-w-[200px]">
+              A free typing trainer that actually tracks your progress.
             </p>
-            <div className="flex gap-5">
-              <Link href="#" className="grid-box p-2.5 hover:bg-primary/5 hover:border-primary/40 transition-all group">
-                <ExternalLink className="w-4.5 h-4.5 text-on-surface-variant/40 group-hover:text-primary" />
-              </Link>
-              <Link href="#" className="grid-box p-2.5 hover:bg-primary/5 hover:border-primary/40 transition-all group">
-                <XIcon className="w-4.5 h-4.5 text-on-surface-variant/40 group-hover:text-primary" />
-              </Link>
-              <Link href="#" className="grid-box p-2.5 hover:bg-primary/5 hover:border-primary/40 transition-all group">
-                <Mail className="w-4.5 h-4.5 text-on-surface-variant/40 group-hover:text-primary" />
-              </Link>
+            <div className="flex items-center gap-2">
+              {[
+                { href: 'https://github.com', icon: <Github className="w-4 h-4" />, label: 'GitHub' },
+                { href: 'https://twitter.com', icon: <Twitter className="w-4 h-4" />, label: 'Twitter' },
+                { href: '#', icon: <Mail className="w-4 h-4" />, label: 'Email' },
+              ].map(s => (
+                <a
+                  key={s.label}
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={s.label}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg border border-white/8 text-on-surface-variant/40 hover:text-on-surface/80 hover:border-white/20 hover:bg-white/4 transition-all"
+                >
+                  {s.icon}
+                </a>
+              ))}
             </div>
           </div>
 
-          {/* Navigation Matrix */}
+          {/* Product links */}
           <div>
-            <h4 className="text-[13px] font-black text-primary uppercase tracking-[0.5em] mb-10 flex items-center gap-3">
-              <div className="w-2 h-2 bg-primary/40 grid-box" /> Product Matrix
-            </h4>
-            <ul className="space-y-5">
-              {footerLinks.product.map(l => (
-                <li key={l.name}>
-                  <Link href={l.href} className="text-xs font-bold text-on-surface-variant/40 uppercase tracking-[0.2em] hover:text-primary transition-colors flex items-center gap-2 group">
-                    <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity -ml-2" /> {l.name}
+            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-on-surface-variant/30 mb-5">Product</p>
+            <ul className="space-y-3.5">
+              {links.product.map(l => (
+                <li key={l.label}>
+                  <Link href={l.href} className="text-sm text-on-surface-variant/50 hover:text-on-surface/80 transition-colors">
+                    {l.label}
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Network Column */}
+          {/* Account links */}
           <div>
-            <h4 className="text-[13px] font-black text-primary uppercase tracking-[0.5em] mb-10 flex items-center gap-3">
-              <div className="w-2 h-2 bg-primary/40 grid-box" /> Connectivity
-            </h4>
-            <ul className="space-y-5">
-              {footerLinks.community.map(l => (
-                <li key={l.name}>
-                  <Link href={l.href} className="text-xs font-bold text-on-surface-variant/40 uppercase tracking-[0.2em] hover:text-primary transition-colors flex items-center gap-2 group">
-                    <ExternalLink className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity -ml-2" /> {l.name}
+            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-on-surface-variant/30 mb-5">Account</p>
+            <ul className="space-y-3.5">
+              {links.account.map(l => (
+                <li key={l.label}>
+                  <Link href={l.href} className="text-sm text-on-surface-variant/50 hover:text-on-surface/80 transition-colors">
+                    {l.label}
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Security/Protocol Column */}
+          {/* Legal */}
           <div>
-            <h4 className="text-[13px] font-black text-primary uppercase tracking-[0.5em] mb-10 flex items-center gap-3">
-              <div className="w-2 h-2 bg-primary/40 grid-box" /> Protocol
-            </h4>
-            <ul className="space-y-5">
-              {footerLinks.legal.map(l => (
-                <li key={l.name}>
-                  <Link href={l.href} className="text-xs font-bold text-on-surface-variant/40 uppercase tracking-[0.2em] hover:text-primary transition-colors flex items-center gap-2 group">
-                    <Shield className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity -ml-2" /> {l.name}
+            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-on-surface-variant/30 mb-5">Legal</p>
+            <ul className="space-y-3.5">
+              {links.legal.map(l => (
+                <li key={l.label}>
+                  <Link href={l.href} className="text-sm text-on-surface-variant/50 hover:text-on-surface/80 transition-colors">
+                    {l.label}
                   </Link>
                 </li>
               ))}
@@ -114,18 +105,15 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Binary Bottom Bar */}
-        <div className="pt-16 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-10">
-          <div className="flex items-center gap-8 text-[11px] font-bold text-on-surface-variant/20 uppercase tracking-[0.4em]">
-             <span>SYSTEM: STABLE</span>
-             <span className="w-1.5 h-1.5 bg-white/10 rounded-full" />
-             <span>LATENCY: 12ms</span>
-             <span className="w-1.5 h-1.5 bg-white/10 rounded-full" />
-             <span>POOL: {currentYear}.V2</span>
-          </div>
-          <p className="text-[11px] font-bold text-on-surface-variant/30 uppercase tracking-[0.3em]">
-            © {currentYear} Horse Typing Systems. All rights authorized.
+        {/* Bottom bar */}
+        <div className="pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-on-surface-variant/30">
+            © {year} Horse Typing. Free to use, always.
           </p>
+          <div className="flex items-center gap-1.5 text-xs text-on-surface-variant/25">
+            <span className="w-1.5 h-1.5 rounded-full bg-correct/50 inline-block" />
+            All systems operational
+          </div>
         </div>
       </div>
     </footer>
