@@ -74,83 +74,209 @@ function getHighlightKeyInfo(targetChar: string, isHindi: boolean): { code: stri
   return null;
 }
 
+// ─── Key Type Definition ─────────────────────────────────────────
 type KeyboardKey = {
   code: string;
   label: string;
   shiftLabel?: string;
   hindiLabel?: string;
   hindiShiftLabel?: string;
-  isWide?: boolean;
-  isSpace?: boolean;
-  widthClass?: string;
+  /** 'char' = letter/number/punctuation, 'mod' = modifier/function, 'space' = spacebar */
+  type: 'char' | 'mod' | 'space';
+  /** flex-basis width in units (1 unit ≈ 40px). Default 1 */
+  flex?: number;
 };
 
-const KEYBOARD_ROWS: KeyboardKey[][] = [
+// One flex unit = 40px. Standard alpha key = 1 unit.
+const KB: KeyboardKey[][] = [
+  // ── Row 0: Esc + F-keys ─────────────────────────────
   [
-    { code: 'Backquote', label: '`', shiftLabel: '~', hindiLabel: 'ॊ', hindiShiftLabel: 'ऒ' },
-    { code: 'Digit1', label: '1', shiftLabel: '!', hindiLabel: '१', hindiShiftLabel: 'ऍ' },
-    { code: 'Digit2', label: '2', shiftLabel: '@', hindiLabel: '२', hindiShiftLabel: 'ॅ' },
-    { code: 'Digit3', label: '3', shiftLabel: '#', hindiLabel: '३', hindiShiftLabel: '्र' },
-    { code: 'Digit4', label: '4', shiftLabel: '$', hindiLabel: '४', hindiShiftLabel: 'र्' },
-    { code: 'Digit5', label: '5', shiftLabel: '%', hindiLabel: '५', hindiShiftLabel: 'ज्ञ' },
-    { code: 'Digit6', label: '6', shiftLabel: '^', hindiLabel: '६', hindiShiftLabel: 'त्र' },
-    { code: 'Digit7', label: '7', shiftLabel: '&', hindiLabel: '७', hindiShiftLabel: 'क्ष' },
-    { code: 'Digit8', label: '8', shiftLabel: '*', hindiLabel: '८', hindiShiftLabel: 'श्र' },
-    { code: 'Digit9', label: '9', shiftLabel: '(', hindiLabel: '९', hindiShiftLabel: '(' },
-    { code: 'Digit0', label: '0', shiftLabel: ')', hindiLabel: '०', hindiShiftLabel: ')' },
-    { code: 'Minus', label: '-', shiftLabel: '_', hindiLabel: '-', hindiShiftLabel: 'ः' },
-    { code: 'Equal', label: '=', shiftLabel: '+', hindiLabel: 'ृ', hindiShiftLabel: 'ऋ' },
-    { code: 'Backspace', label: 'Backspace', isWide: true, widthClass: 'w-[80px] sm:w-[96px] flex-grow' },
+    { code: 'Escape',      label: 'Esc',  type: 'mod',   flex: 1 },
+    { code: 'F1',          label: 'F1',   type: 'mod',   flex: 1 },
+    { code: 'F2',          label: 'F2',   type: 'mod',   flex: 1 },
+    { code: 'F3',          label: 'F3',   type: 'mod',   flex: 1 },
+    { code: 'F4',          label: 'F4',   type: 'mod',   flex: 1 },
+    { code: 'F5',          label: 'F5',   type: 'mod',   flex: 1 },
+    { code: 'F6',          label: 'F6',   type: 'mod',   flex: 1 },
+    { code: 'F7',          label: 'F7',   type: 'mod',   flex: 1 },
+    { code: 'F8',          label: 'F8',   type: 'mod',   flex: 1 },
+    { code: 'F9',          label: 'F9',   type: 'mod',   flex: 1 },
+    { code: 'F10',         label: 'F10',  type: 'mod',   flex: 1 },
+    { code: 'F11',         label: 'F11',  type: 'mod',   flex: 1 },
+    { code: 'F12',         label: 'F12',  type: 'mod',   flex: 1 },
+    { code: 'Delete',      label: 'Del',  type: 'mod',   flex: 1 },
   ],
+  // ── Row 1: Number row + Backspace ─────────────────
   [
-    { code: 'Tab', label: 'Tab', isWide: true, widthClass: 'w-[50px] sm:w-[60px] flex-grow' },
-    { code: 'KeyQ', label: 'Q', hindiLabel: 'ौ', hindiShiftLabel: 'औ' },
-    { code: 'KeyW', label: 'W', hindiLabel: 'ै', hindiShiftLabel: 'ऐ' },
-    { code: 'KeyE', label: 'E', hindiLabel: 'ा', hindiShiftLabel: 'आ' },
-    { code: 'KeyR', label: 'R', hindiLabel: 'ी', hindiShiftLabel: 'ई' },
-    { code: 'KeyT', label: 'T', hindiLabel: 'ू', hindiShiftLabel: 'ऊ' },
-    { code: 'KeyY', label: 'Y', hindiLabel: 'ब', hindiShiftLabel: 'भ' },
-    { code: 'KeyU', label: 'U', hindiLabel: 'ह', hindiShiftLabel: 'ङ' },
-    { code: 'KeyI', label: 'I', hindiLabel: 'ग', hindiShiftLabel: 'घ' },
-    { code: 'KeyO', label: 'O', hindiLabel: 'द', hindiShiftLabel: 'ध' },
-    { code: 'KeyP', label: 'P', hindiLabel: 'ज', hindiShiftLabel: 'झ' },
-    { code: 'BracketLeft', label: '[', shiftLabel: '{', hindiLabel: 'ड', hindiShiftLabel: 'ढ' },
-    { code: 'BracketRight', label: ']', shiftLabel: '}', hindiLabel: '़', hindiShiftLabel: 'ञ' },
-    { code: 'Backslash', label: '\\', shiftLabel: '|', hindiLabel: 'ॉ', hindiShiftLabel: 'ऑ', widthClass: 'w-[45px] sm:w-[54px] flex-grow' },
+    { code: 'Backquote',   label: '`',  shiftLabel: '~',  hindiLabel: 'ॊ', hindiShiftLabel: 'ऒ',  type: 'char', flex: 1 },
+    { code: 'Digit1',      label: '1',  shiftLabel: '!',  hindiLabel: '१', hindiShiftLabel: 'ऍ',  type: 'char', flex: 1 },
+    { code: 'Digit2',      label: '2',  shiftLabel: '@',  hindiLabel: '२', hindiShiftLabel: 'ॅ',  type: 'char', flex: 1 },
+    { code: 'Digit3',      label: '3',  shiftLabel: '#',  hindiLabel: '३', hindiShiftLabel: '्र', type: 'char', flex: 1 },
+    { code: 'Digit4',      label: '4',  shiftLabel: '$',  hindiLabel: '४', hindiShiftLabel: 'र्', type: 'char', flex: 1 },
+    { code: 'Digit5',      label: '5',  shiftLabel: '%',  hindiLabel: '५', hindiShiftLabel: 'ज्ञ',type: 'char', flex: 1 },
+    { code: 'Digit6',      label: '6',  shiftLabel: '^',  hindiLabel: '६', hindiShiftLabel: 'त्र',type: 'char', flex: 1 },
+    { code: 'Digit7',      label: '7',  shiftLabel: '&',  hindiLabel: '७', hindiShiftLabel: 'क्ष',type: 'char', flex: 1 },
+    { code: 'Digit8',      label: '8',  shiftLabel: '*',  hindiLabel: '८', hindiShiftLabel: 'श्र',type: 'char', flex: 1 },
+    { code: 'Digit9',      label: '9',  shiftLabel: '(',  hindiLabel: '९', hindiShiftLabel: '(',  type: 'char', flex: 1 },
+    { code: 'Digit0',      label: '0',  shiftLabel: ')',  hindiLabel: '०', hindiShiftLabel: ')',  type: 'char', flex: 1 },
+    { code: 'Minus',       label: '-',  shiftLabel: '_',  hindiLabel: '-', hindiShiftLabel: 'ः',  type: 'char', flex: 1 },
+    { code: 'Equal',       label: '=',  shiftLabel: '+',  hindiLabel: 'ृ', hindiShiftLabel: 'ऋ',  type: 'char', flex: 1 },
+    { code: 'Backspace',   label: '⌫ Backspace',          type: 'mod',  flex: 2 },
   ],
+  // ── Row 2: Tab + QWERTY ──────────────────────────
   [
-    { code: 'CapsLock', label: 'Caps', isWide: true, widthClass: 'w-[65px] sm:w-[78px] flex-grow' },
-    { code: 'KeyA', label: 'A', hindiLabel: 'ो', hindiShiftLabel: 'ओ' },
-    { code: 'KeyS', label: 'S', hindiLabel: 'े', hindiShiftLabel: 'ए' },
-    { code: 'KeyD', label: 'D', hindiLabel: '्', hindiShiftLabel: 'अ' },
-    { code: 'KeyF', label: 'F', hindiLabel: 'ि', hindiShiftLabel: 'इ' },
-    { code: 'KeyG', label: 'G', hindiLabel: 'ु', hindiShiftLabel: 'उ' },
-    { code: 'KeyH', label: 'H', hindiLabel: 'प', hindiShiftLabel: 'फ' },
-    { code: 'KeyJ', label: 'J', hindiLabel: 'र', hindiShiftLabel: 'ऱ' },
-    { code: 'KeyK', label: 'K', hindiLabel: 'क', hindiShiftLabel: 'ख' },
-    { code: 'KeyL', label: 'L', hindiLabel: 'त', hindiShiftLabel: 'थ' },
-    { code: 'Semicolon', label: ';', shiftLabel: ':', hindiLabel: 'च', hindiShiftLabel: 'छ' },
-    { code: 'Quote', label: "'", shiftLabel: '"', hindiLabel: 'ट', hindiShiftLabel: 'ठ' },
-    { code: 'Enter', label: 'Enter', isWide: true, widthClass: 'w-[75px] sm:w-[90px] flex-grow' },
+    { code: 'Tab',         label: 'Tab ⇥',               type: 'mod',  flex: 1.5 },
+    { code: 'KeyQ',        label: 'Q',  hindiLabel: 'ौ', hindiShiftLabel: 'औ',  type: 'char', flex: 1 },
+    { code: 'KeyW',        label: 'W',  hindiLabel: 'ै', hindiShiftLabel: 'ऐ',  type: 'char', flex: 1 },
+    { code: 'KeyE',        label: 'E',  hindiLabel: 'ा', hindiShiftLabel: 'आ',  type: 'char', flex: 1 },
+    { code: 'KeyR',        label: 'R',  hindiLabel: 'ी', hindiShiftLabel: 'ई',  type: 'char', flex: 1 },
+    { code: 'KeyT',        label: 'T',  hindiLabel: 'ू', hindiShiftLabel: 'ऊ',  type: 'char', flex: 1 },
+    { code: 'KeyY',        label: 'Y',  hindiLabel: 'ब', hindiShiftLabel: 'भ',  type: 'char', flex: 1 },
+    { code: 'KeyU',        label: 'U',  hindiLabel: 'ह', hindiShiftLabel: 'ङ',  type: 'char', flex: 1 },
+    { code: 'KeyI',        label: 'I',  hindiLabel: 'ग', hindiShiftLabel: 'घ',  type: 'char', flex: 1 },
+    { code: 'KeyO',        label: 'O',  hindiLabel: 'द', hindiShiftLabel: 'ध',  type: 'char', flex: 1 },
+    { code: 'KeyP',        label: 'P',  hindiLabel: 'ज', hindiShiftLabel: 'झ',  type: 'char', flex: 1 },
+    { code: 'BracketLeft', label: '[',  shiftLabel: '{', hindiLabel: 'ड', hindiShiftLabel: 'ढ',  type: 'char', flex: 1 },
+    { code: 'BracketRight',label: ']',  shiftLabel: '}', hindiLabel: '़', hindiShiftLabel: 'ञ',  type: 'char', flex: 1 },
+    { code: 'Backslash',   label: '\\', shiftLabel: '|', hindiLabel: 'ॉ', hindiShiftLabel: 'ऑ', type: 'char', flex: 1.5 },
   ],
+  // ── Row 3: Caps + ASDF + Enter ──────────────────
   [
-    { code: 'ShiftLeft', label: 'Shift', isWide: true, widthClass: 'w-[85px] sm:w-[102px] flex-grow' },
-    { code: 'KeyZ', label: 'Z', hindiLabel: 'ॆ', hindiShiftLabel: 'ऎ' },
-    { code: 'KeyX', label: 'X', hindiLabel: 'ं', hindiShiftLabel: 'ँ' },
-    { code: 'KeyC', label: 'C', hindiLabel: 'म', hindiShiftLabel: 'ण' },
-    { code: 'KeyV', label: 'V', hindiLabel: 'न', hindiShiftLabel: 'ऩ' },
-    { code: 'KeyB', label: 'B', hindiLabel: 'व', hindiShiftLabel: 'ऴ' },
-    { code: 'KeyN', label: 'N', hindiLabel: 'ल', hindiShiftLabel: 'ळ' },
-    { code: 'KeyM', label: 'M', hindiLabel: 'स', hindiShiftLabel: 'श' },
-    { code: 'Comma', label: ',', shiftLabel: '<', hindiLabel: ',', hindiShiftLabel: 'ष' },
-    { code: 'Period', label: '.', shiftLabel: '>', hindiLabel: '।', hindiShiftLabel: '.' },
-    { code: 'Slash', label: '/', shiftLabel: '?', hindiLabel: 'य', hindiShiftLabel: 'य़' },
-    { code: 'ShiftRight', label: 'Shift', isWide: true, widthClass: 'w-[85px] sm:w-[102px] flex-grow' },
+    { code: 'CapsLock',    label: '⇪ Caps',              type: 'mod',  flex: 1.75 },
+    { code: 'KeyA',        label: 'A',  hindiLabel: 'ो', hindiShiftLabel: 'ओ',  type: 'char', flex: 1 },
+    { code: 'KeyS',        label: 'S',  hindiLabel: 'े', hindiShiftLabel: 'ए',  type: 'char', flex: 1 },
+    { code: 'KeyD',        label: 'D',  hindiLabel: '्', hindiShiftLabel: 'अ',  type: 'char', flex: 1 },
+    { code: 'KeyF',        label: 'F',  hindiLabel: 'ि', hindiShiftLabel: 'इ',  type: 'char', flex: 1 },
+    { code: 'KeyG',        label: 'G',  hindiLabel: 'ु', hindiShiftLabel: 'उ',  type: 'char', flex: 1 },
+    { code: 'KeyH',        label: 'H',  hindiLabel: 'प', hindiShiftLabel: 'फ',  type: 'char', flex: 1 },
+    { code: 'KeyJ',        label: 'J',  hindiLabel: 'र', hindiShiftLabel: 'ऱ',  type: 'char', flex: 1 },
+    { code: 'KeyK',        label: 'K',  hindiLabel: 'क', hindiShiftLabel: 'ख',  type: 'char', flex: 1 },
+    { code: 'KeyL',        label: 'L',  hindiLabel: 'त', hindiShiftLabel: 'थ',  type: 'char', flex: 1 },
+    { code: 'Semicolon',   label: ';',  shiftLabel: ':', hindiLabel: 'च', hindiShiftLabel: 'छ',  type: 'char', flex: 1 },
+    { code: 'Quote',       label: "'",  shiftLabel: '"', hindiLabel: 'ट', hindiShiftLabel: 'ठ',  type: 'char', flex: 1 },
+    { code: 'Enter',       label: '↵ Enter',              type: 'mod',  flex: 2.25 },
   ],
+  // ── Row 4: Shift + ZXCV + Shift ─────────────────
   [
-    { code: 'Space', label: 'Space', isSpace: true, widthClass: 'w-[300px] sm:w-[400px] flex-grow max-w-[500px]' },
-  ]
+    { code: 'ShiftLeft',   label: '⇧ Shift',              type: 'mod',  flex: 2.25 },
+    { code: 'KeyZ',        label: 'Z',  hindiLabel: 'ॆ', hindiShiftLabel: 'ऎ',  type: 'char', flex: 1 },
+    { code: 'KeyX',        label: 'X',  hindiLabel: 'ं', hindiShiftLabel: 'ँ',  type: 'char', flex: 1 },
+    { code: 'KeyC',        label: 'C',  hindiLabel: 'म', hindiShiftLabel: 'ण',  type: 'char', flex: 1 },
+    { code: 'KeyV',        label: 'V',  hindiLabel: 'न', hindiShiftLabel: 'ऩ',  type: 'char', flex: 1 },
+    { code: 'KeyB',        label: 'B',  hindiLabel: 'व', hindiShiftLabel: 'ऴ',  type: 'char', flex: 1 },
+    { code: 'KeyN',        label: 'N',  hindiLabel: 'ल', hindiShiftLabel: 'ळ',  type: 'char', flex: 1 },
+    { code: 'KeyM',        label: 'M',  hindiLabel: 'स', hindiShiftLabel: 'श',  type: 'char', flex: 1 },
+    { code: 'Comma',       label: ',',  shiftLabel: '<', hindiLabel: ',', hindiShiftLabel: 'ष', type: 'char', flex: 1 },
+    { code: 'Period',      label: '.',  shiftLabel: '>', hindiLabel: '।', hindiShiftLabel: '.', type: 'char', flex: 1 },
+    { code: 'Slash',       label: '/',  shiftLabel: '?', hindiLabel: 'य', hindiShiftLabel: 'य़',type: 'char', flex: 1 },
+    { code: 'ShiftRight',  label: '⇧ Shift',              type: 'mod',  flex: 2.75 },
+  ],
+  // ── Row 5: Bottom row ────────────────────────────
+  [
+    { code: 'ControlLeft', label: 'Ctrl',  type: 'mod',   flex: 1.25 },
+    { code: 'MetaLeft',    label: '⌘',     type: 'mod',   flex: 1.25 },
+    { code: 'AltLeft',     label: 'Alt',   type: 'mod',   flex: 1.25 },
+    { code: 'Space',       label: '',      type: 'space',  flex: 6.25 },
+    { code: 'AltRight',    label: 'Alt',   type: 'mod',   flex: 1.25 },
+    { code: 'ArrowLeft',   label: '←',     type: 'mod',   flex: 1 },
+    { code: 'ArrowUp',     label: '↑',     type: 'mod',   flex: 1 },
+    { code: 'ArrowDown',   label: '↓',     type: 'mod',   flex: 1 },
+    { code: 'ArrowRight',  label: '→',     type: 'mod',   flex: 1 },
+  ],
 ];
+
+// ─── Single Key Cell ─────────────────────────────────────────────
+function KeyCell({
+  kb, isHighlighted, style, language,
+}: {
+  kb: KeyboardKey;
+  isHighlighted: boolean;
+  style: 'standard' | 'neon' | 'retro';
+  language: 'english' | 'hindi';
+}) {
+  const isHindi = language === 'hindi';
+  const primary   = kb.type === 'char' ? (isHindi ? (kb.hindiLabel   || kb.label)      : kb.label)      : kb.label;
+  const secondary = kb.type === 'char' ? (isHindi ? kb.hindiShiftLabel : kb.shiftLabel)                  : undefined;
+  const isChar    = kb.type === 'char';
+  const isMod     = kb.type === 'mod';
+  const isSpace   = kb.type === 'space';
+
+  // Base colors per key type and style
+  let baseStyle = '';
+  let pressedStyle = '';
+  let shadow3d = ''
+  let pressedShadow = '';
+
+  if (style === 'standard') {
+    // Dark theme
+    const charBase  = 'dark:bg-[#2a2a35] bg-[#e0e0e8] dark:text-[#c8c8e0] text-[#1a1a2e] dark:border-[#3a3a50]/80 border-[#b0b0c0]';
+    const modBase   = 'dark:bg-[#1e1e28] bg-[#cbcbd8] dark:text-[#8888aa] text-[#4a4a6a] dark:border-[#303045]/80 border-[#a0a0b5]';
+    const spaceBase = 'dark:bg-[#252535] bg-[#d8d8e8] dark:text-[#6666aa] text-[#3a3a6a] dark:border-[#353550]/80 border-[#ababc0]';
+
+    baseStyle    = `border rounded-[5px] ${isChar ? charBase : isMod ? modBase : spaceBase}`;
+    shadow3d     = 'shadow-[0_5px_0_0] dark:shadow-[#0d0d18] shadow-[#9898a8]';
+    pressedStyle = `${isChar ? charBase : isMod ? modBase : spaceBase} border rounded-[5px]`;
+    pressedShadow= 'shadow-[0_2px_0_0] dark:shadow-[#0d0d18] shadow-[#9898a8] translate-y-[3px]';
+  } else if (style === 'neon') {
+    const charBase  = 'bg-[#0d0d1a] text-[#a0a0ff] border-[#3030a0]/60';
+    const modBase   = 'bg-[#080812] text-[#606090] border-[#202060]/50';
+    const spaceBase = 'bg-[#0a0a16] text-[#5050a0] border-[#252575]/50';
+
+    baseStyle    = `border rounded-[4px] ${isChar ? charBase : isMod ? modBase : spaceBase}`;
+    shadow3d     = 'shadow-[0_5px_0_0] shadow-[#05050f]';
+    pressedStyle = `${isChar ? charBase : isMod ? modBase : spaceBase} border rounded-[4px]`;
+    pressedShadow= 'shadow-[0_2px_0_0] shadow-[#05050f] translate-y-[3px]';
+  } else {
+    // retro
+    const charBase  = 'dark:bg-[#3a3a2e] bg-[#d8d4b0] dark:text-[#d8d890] text-[#2a2810] dark:border-[#555540] border-[#a8a48a]';
+    const modBase   = 'dark:bg-[#2e2e28] bg-[#c8c4a0] dark:text-[#909070] text-[#4a4828] dark:border-[#444438] border-[#989478]';
+    const spaceBase = 'dark:bg-[#383830] bg-[#d0cc9a] dark:text-[#707058] text-[#383618] dark:border-[#4a4a3c] border-[#a0988a]';
+
+    baseStyle    = `border-2 rounded-[3px] font-bold ${isChar ? charBase : isMod ? modBase : spaceBase}`;
+    shadow3d     = 'shadow-[3px_5px_0_0] dark:shadow-[#12120c] shadow-[#808060]';
+    pressedStyle = `${isChar ? charBase : isMod ? modBase : spaceBase} border-2 rounded-[3px] font-bold`;
+    pressedShadow= 'shadow-[1px_2px_0_0] dark:shadow-[#12120c] shadow-[#808060] translate-x-[2px] translate-y-[3px]';
+  }
+
+  const highlightOver = isHighlighted
+    ? style === 'neon'
+      ? 'border-[#7070ff] bg-[#1a1a40] text-[#b0b0ff] shadow-[0_0_10px_2px_rgba(100,100,255,0.4)]'
+      : style === 'retro'
+        ? 'dark:bg-[#5a5820] bg-[#ffffaa] dark:text-[#ffee40] text-[#3a3800] dark:border-[#888840] border-[#c8c040]'
+        : 'dark:bg-[#3a3060] bg-[#d8d0ff] dark:text-[#c8b4ff] text-[#2a0080] dark:border-[#6040c0] border-[#8060e0]'
+    : '';
+
+  const finalShadow = isHighlighted ? pressedShadow : shadow3d;
+  const finalState  = isHighlighted ? pressedStyle  : baseStyle;
+
+  return (
+    <div
+      style={{ flexGrow: kb.flex ?? 1, flexShrink: 0, flexBasis: `${(kb.flex ?? 1) * 40}px`, minWidth: `${(kb.flex ?? 1) * 28}px` }}
+      className={`
+        relative h-10 sm:h-[44px] flex flex-col items-center justify-center
+        transition-all duration-[60ms] ease-out select-none
+        ${finalState} ${finalShadow} ${isHighlighted ? highlightOver : ''}
+      `}
+    >
+      {/* Shift / secondary label — top-right corner */}
+      {secondary && (
+        <span className="absolute top-[3px] right-[5px] text-[8px] sm:text-[9px] opacity-50 font-semibold leading-none">
+          {secondary}
+        </span>
+      )}
+
+      {/* Primary label */}
+      {isSpace ? (
+        // Space bar: show small indicator
+        <span className="text-[10px] opacity-30 tracking-[0.3em] uppercase font-bold">space</span>
+      ) : isChar ? (
+        <span className="text-[12px] sm:text-[14px] font-bold leading-none">{primary}</span>
+      ) : (
+        <span className="text-[8px] sm:text-[9px] font-semibold tracking-wide leading-none text-center px-1">{primary}</span>
+      )}
+    </div>
+  );
+}
 
 function VirtualKeyboard({
   highlightKey,
@@ -162,56 +288,31 @@ function VirtualKeyboard({
   language: 'english' | 'hindi';
 }) {
   return (
-    <div className="w-full flex flex-col gap-1 sm:gap-1.5 p-2 sm:p-4 rounded-[4px] border border-white/5 bg-white/[0.01] backdrop-blur-sm select-none max-w-4xl mx-auto overflow-x-auto no-scrollbar py-3 shrink-0">
-      {KEYBOARD_ROWS.map((row, rowIdx) => (
-        <div key={rowIdx} className="flex justify-center gap-1 sm:gap-1.5 w-full">
+    <div
+      className={`
+        w-full flex flex-col gap-[5px] sm:gap-[6px] select-none max-w-5xl mx-auto overflow-x-auto no-scrollbar shrink-0
+        p-3 sm:p-5 rounded-xl
+        dark:bg-[#13131f] bg-[#e8e8f0]
+        dark:border dark:border-white/[0.06] border border-black/[0.08]
+        dark:shadow-[0_20px_60px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.04)]
+        shadow-[0_8px_32px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.8)]
+      `}
+    >
+      {KB.map((row, rowIdx) => (
+        <div key={rowIdx} className="flex justify-center gap-[4px] sm:gap-[5px] w-full">
           {row.map(key => {
-            const isHighlighted = highlightKey && (
-              highlightKey.code === key.code || 
+            const isHighlighted = !!highlightKey && (
+              highlightKey.code === key.code ||
               (highlightKey.shift && (key.code === 'ShiftLeft' || key.code === 'ShiftRight'))
             );
-            
-            const isHindi = language === 'hindi';
-            let displayLabel = isHindi ? (key.hindiLabel || key.label) : key.label;
-            let displayShiftLabel = isHindi ? key.hindiShiftLabel : key.shiftLabel;
-            
-            const wClass = key.widthClass || 'w-10 sm:w-12 h-10 sm:h-12 flex-shrink-0';
-            
-            let themeClass = '';
-            let activeClass = '';
-            
-            if (style === 'standard') {
-              themeClass = 'bg-[#18181b]/50 border border-white/10 text-on-surface-variant/70 rounded-[2px] shadow-sm';
-              activeClass = isHighlighted 
-                ? 'bg-primary/20 border-primary text-primary shadow-lg shadow-primary/20 scale-[0.98]'
-                : '';
-            } else if (style === 'neon') {
-              themeClass = 'bg-black/40 border border-white/5 text-on-surface-variant/60 rounded-[4px] backdrop-blur-md transition-all duration-300';
-              activeClass = isHighlighted
-                ? 'border-primary text-primary shadow-[0_0_12px_var(--color-primary)] bg-primary/10 scale-[0.97]'
-                : 'hover:border-white/20';
-            } else if (style === 'retro') {
-              themeClass = 'bg-[#dedede] dark:bg-[#2e2e2e] border-t-2 border-l-2 border-r-[3px] border-b-[3px] border-t-white/80 dark:border-t-white/15 border-l-white/80 dark:border-l-white/15 border-r-[#8a8a8a] border-b-[#8a8a8a] text-[#333] dark:text-[#ccc] rounded-[3px] shadow-[3px_3px_0px_rgba(0,0,0,0.8)] font-bold';
-              activeClass = isHighlighted
-                ? 'bg-primary/10 border-t-[#8a8a8a] border-l-[#8a8a8a] border-r-white/80 border-b-white/80 translate-x-[2px] translate-y-[2px] shadow-[1px_1px_0px_rgba(0,0,0,0.8)] text-primary font-black'
-                : '';
-            }
-            
             return (
-              <div
+              <KeyCell
                 key={key.code}
-                className={`${wClass} relative flex flex-col items-center justify-center text-[11px] sm:text-xs select-none transition-all duration-75 ${themeClass} ${activeClass}`}
-              >
-                {displayShiftLabel && !key.isWide && !key.isSpace && (
-                  <span className="absolute top-1 right-1 sm:right-1.5 text-[8px] sm:text-[9px] opacity-40 font-semibold font-mono">
-                    {displayShiftLabel}
-                  </span>
-                )}
-                
-                <span className={`font-mono ${key.isWide ? 'text-[9px] sm:text-[10px] font-semibold tracking-wider' : 'text-xs sm:text-sm font-bold'}`}>
-                  {displayLabel}
-                </span>
-              </div>
+                kb={key}
+                isHighlighted={isHighlighted}
+                style={style}
+                language={language}
+              />
             );
           })}
         </div>
