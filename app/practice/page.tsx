@@ -56,11 +56,11 @@ function ResultCard({ label, value, sub, color }: { label: string; value: string
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="grid-box p-5 md:p-6 bg-white/[0.015] flex flex-col gap-1"
+      className="grid-box p-4 md:p-5 bg-white/[0.015] flex flex-col gap-1 text-center sm:text-left"
     >
-      <span className="text-[9px] font-black uppercase tracking-[0.45em] text-on-surface-variant/30">{label}</span>
-      <span className={`text-3xl md:text-4xl font-black leading-none ${color ?? 'text-on-surface'}`}>{value}</span>
-      {sub && <span className="text-[10px] font-bold text-on-surface-variant/25 uppercase tracking-wide">{sub}</span>}
+      <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.35em] sm:tracking-[0.45em] text-on-surface-variant/30 truncate">{label}</span>
+      <span className={`text-2xl sm:text-3xl font-black leading-none ${color ?? 'text-on-surface'}`}>{value}</span>
+      {sub && <span className="text-[9px] font-bold text-on-surface-variant/25 uppercase tracking-wide truncate">{sub}</span>}
     </motion.div>
   );
 }
@@ -70,6 +70,7 @@ export default function Practice() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const hiddenInputRef = useRef<HTMLInputElement>(null);
   const [user, setUser] = useState<any>(null);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const [customText, setCustomText] = useState('');
   const [customShuffle, setCustomShuffle] = useState(false);
@@ -191,14 +192,65 @@ export default function Practice() {
 
   // Graph path calculation
   const graphData = useMemo(() => {
-    if (!wpmHistory?.length) return { wpm: '', raw: '', errorDots: [] };
+    if (!wpmHistory?.length) return { wpm: '', raw: '', wpmArea: '', errorDots: [], wpmPoints: [], rawPoints: [] };
     const maxVal = Math.max(...wpmHistory.map(h => Math.max(h.wpm, h.raw, 40)));
     const W = 1000, H = 160;
     const sx = W / Math.max(wpmHistory.length - 1, 1);
     const sy = H / maxVal;
+
+    const wpmPoints = wpmHistory.map((h, i) => [i * sx, H - h.wpm * sy]);
+    const rawPoints = wpmHistory.map((h, i) => [i * sx, H - h.raw * sy]);
+
+    // Helper for line properties (length and angle)
+    const lineProps = (pointA: number[], pointB: number[]) => {
+      const lengthX = pointB[0] - pointA[0];
+      const lengthY = pointB[1] - pointA[1];
+      return {
+        length: Math.sqrt(Math.pow(lengthX, 2) + Math.pow(lengthY, 2)),
+        angle: Math.atan2(lengthY, lengthX)
+      };
+    };
+
+    // Calculate control point for bezier curve
+    const controlPoint = (current: number[], previous: number[] | undefined, next: number[] | undefined, reverse: boolean) => {
+      const p = previous || current;
+      const n = next || current;
+      const o = lineProps(p, n);
+      const angle = o.angle + (reverse ? Math.PI : 0);
+      const length = o.length * 0.15; // smoothing factor
+      const x = current[0] + Math.cos(angle) * length;
+      const y = current[1] + Math.sin(angle) * length;
+      return [x, y];
+    };
+
+    // Form bezier curve command
+    const bezierCommand = (point: number[], i: number, a: number[][]) => {
+      const cps = controlPoint(a[i - 1], a[i - 2], point, false);
+      const cpe = controlPoint(point, a[i - 1], a[i + 1], true);
+      return `C ${cps[0].toFixed(1)},${cps[1].toFixed(1)} ${cpe[0].toFixed(1)},${cpe[1].toFixed(1)} ${point[0].toFixed(1)},${point[1].toFixed(1)}`;
+    };
+
+    const svgPath = (pts: number[][]) => {
+      if (pts.length === 0) return '';
+      return pts.reduce((acc, point, i, a) => i === 0
+        ? `M ${point[0].toFixed(1)},${point[1].toFixed(1)}`
+        : `${acc} ${bezierCommand(point, i, a)}`
+      , '');
+    };
+
+    const wpmPath = svgPath(wpmPoints);
+    const rawPath = svgPath(rawPoints);
+    
+    // Close the area path down to the bottom (Y=160)
+    const lastWpmPoint = wpmPoints[wpmPoints.length - 1];
+    const wpmArea = wpmPath ? `${wpmPath} L ${lastWpmPoint[0].toFixed(1)},160 L 0,160 Z` : '';
+
     return {
-      wpm: `M ${wpmHistory.map((h, i) => `${i * sx},${H - h.wpm * sy}`).join(' L ')}`,
-      raw: `M ${wpmHistory.map((h, i) => `${i * sx},${H - h.raw * sy}`).join(' L ')}`,
+      wpm: wpmPath,
+      raw: rawPath,
+      wpmArea,
+      wpmPoints,
+      rawPoints,
       errorDots: wpmHistory
         .map((h, i) => ({ x: i * sx, y: H - h.wpm * sy, count: h.errors }))
         .filter(e => e.count > 0),
@@ -208,138 +260,295 @@ export default function Practice() {
 
   // ── FINISHED SCREEN ─────────────────────────────────────────────
   if (status === 'finished') {
+    const maxVal = wpmHistory.length > 0 ? Math.max(...wpmHistory.map(h => Math.max(h.wpm, h.raw, 40))) : 100;
+    
     return (
-      <div className="h-[calc(100vh-64px)] mt-16 flex flex-col font-mono text-on-surface overflow-hidden bg-background">
-        <div className="flex-1 overflow-y-auto no-scrollbar">
-          <div className="max-w-4xl mx-auto px-5 sm:px-8 py-10 sm:py-16 space-y-8">
+      <div className="min-h-[calc(100vh-3.5rem)] md:h-[calc(100vh-3.5rem)] mt-14 flex items-center justify-center p-4 sm:p-6 bg-background overflow-y-auto md:overflow-hidden font-mono text-on-surface select-none">
+        <div className="w-full max-w-5xl md:h-full flex flex-col justify-center py-4 md:py-0">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-stretch">
+            
+            {/* Left side: WPM Hero + Stats Grid */}
+            <div className="md:col-span-5 flex flex-col gap-3">
+              {/* WPM Hero */}
+              <motion.div
+                initial={{ opacity: 0, y: -16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+                className="grid-box p-6 bg-white/[0.01] relative overflow-hidden flex flex-col items-center justify-center shrink-0"
+              >
+                <div className="absolute inset-0 opacity-[0.02] grid-lines-hero" />
+                <div className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/50 mb-1">Words Per Minute</div>
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', duration: 0.6, delay: 0.1 }}
+                  className="text-7xl sm:text-8xl font-black leading-none text-primary tracking-tighter"
+                >
+                  {wpm}
+                </motion.div>
+              </motion.div>
 
-            {/* Hero WPM display */}
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="grid-box p-8 sm:p-12 bg-white/[0.01] relative overflow-hidden"
-            >
-              <div className="absolute inset-0 opacity-[0.03]" style={{
-                backgroundImage: 'linear-gradient(to right,#fff 1px,transparent 1px),linear-gradient(to bottom,#fff 1px,transparent 1px)',
-                backgroundSize: '28px 28px',
-              }} />
-              <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-end gap-6 sm:gap-12">
-                <div className="text-center sm:text-left">
-                  <div className="text-[10px] font-black uppercase tracking-[0.5em] text-primary/50 mb-2">Words Per Minute</div>
-                  <motion.div
-                    initial={{ scale: 0.7, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: 'spring', duration: 0.6, delay: 0.1 }}
-                    className="text-[80px] sm:text-[110px] font-black leading-none text-primary tracking-tighter"
-                  >
-                    {wpm}
-                  </motion.div>
-                </div>
-                <div className="flex flex-wrap gap-6 sm:gap-10 justify-center sm:justify-start pb-2">
-                  <ResultCard label="Accuracy" value={`${accuracy}%`} color="text-correct" />
-                  <ResultCard label="Raw WPM" value={raw} color="text-on-surface-variant/60" />
-                  <ResultCard label="Consistency" value={`${consistency}%`} color="text-amber-400/70" />
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Detail stats row */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              className="grid grid-cols-2 sm:grid-cols-4 gap-3"
-            >
-              <ResultCard label="Correct" value={correctChars} color="text-correct" />
-              <ResultCard label="Errors" value={incorrectChars + extraChars + missedChars} color="text-error" />
-              <ResultCard label="Mode" value={options.mode.toUpperCase()} />
-              <ResultCard
-                label="Time"
-                value={`${timeElapsed}s`}
-                sub={options.mode === 'time' ? `${options.wordCount}s test` : undefined}
-              />
-            </motion.div>
-
-            {/* Graph */}
-            {wpmHistory.length > 1 && (
+              {/* Stats Grid */}
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.25 }}
-                className="grid-box p-6 sm:p-8 bg-white/[0.01]"
+                transition={{ delay: 0.12 }}
+                className="grid grid-cols-3 gap-2.5"
               >
-                <div className="flex items-center gap-3 mb-6">
-                  <TrendingUp className="w-4 h-4 text-primary/50" />
-                  <span className="text-[10px] font-black uppercase tracking-[0.45em] text-on-surface-variant/40">Performance Graph</span>
-                  {quoteSource && (
-                    <span className="ml-auto text-[10px] text-primary/30 font-bold uppercase tracking-wide">— {quoteSource}</span>
-                  )}
-                </div>
-                <div className="flex gap-6">
-                  {/* Y axis */}
-                  <div className="flex flex-col justify-between text-[9px] font-bold text-on-surface-variant/20 uppercase py-1 w-6 text-right shrink-0">
-                    <span>{Math.max(...wpmHistory.map(h => Math.max(h.wpm, h.raw, 40)))}</span>
-                    <span>0</span>
-                  </div>
-                  <div className="flex-1 relative h-[160px]">
-                    <svg className="w-full h-full" viewBox="0 0 1000 160" preserveAspectRatio="none">
-                      {/* Raw line */}
-                      <path d={graphData.raw} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="2" strokeLinejoin="round" />
-                      {/* WPM area */}
-                      <path
-                        d={graphData.wpm + ` L ${1000},160 L 0,160 Z`}
-                        fill="rgba(153,153,153,0.05)"
-                      />
-                      {/* WPM line */}
-                      <path d={graphData.wpm} fill="none" stroke="var(--color-primary)" strokeWidth="2.5" strokeLinejoin="round" />
-                      {/* Error dots */}
-                      {graphData.errorDots.map((e, i) => (
-                        <circle key={i} cx={e.x} cy={e.y} r="4" fill="#ff5252" opacity="0.8" />
-                      ))}
-                    </svg>
-                  </div>
-                </div>
-                <div className="flex justify-between mt-3 text-[9px] font-bold text-on-surface-variant/20 uppercase tracking-widest">
-                  <span>Start</span>
-                  <div className="flex items-center gap-6">
-                    <span className="flex items-center gap-2"><span className="inline-block w-4 h-0.5 bg-primary/60" /> WPM</span>
-                    <span className="flex items-center gap-2"><span className="inline-block w-4 h-0.5 bg-white/10" /> Raw</span>
-                    <span className="flex items-center gap-2"><span className="inline-block w-2 h-2 rounded-full bg-error/70" /> Errors</span>
-                  </div>
-                  <span>{timeElapsed}s</span>
-                </div>
+                <ResultCard label="Accuracy" value={`${accuracy}%`} color="text-correct" />
+                <ResultCard label="Raw WPM" value={raw} color="text-on-surface-variant/60" />
+                <ResultCard label="Consistency" value={`${consistency}%`} color="text-amber-400/70" />
+                <ResultCard label="Correct" value={correctChars} color="text-correct/75" />
+                <ResultCard label="Errors" value={incorrectChars + extraChars + missedChars} color={incorrectChars + extraChars + missedChars > 0 ? "text-error" : "text-on-surface-variant/40"} />
+                <ResultCard label="Mode" value={options.mode.toUpperCase()} color="text-primary/70" />
               </motion.div>
-            )}
+            </div>
 
-            {/* Action buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.35 }}
-              className="flex flex-col sm:flex-row gap-3"
-            >
-              <button
-                onClick={() => initializeEngine(options)}
-                className="flex-1 grid-box py-4 flex items-center justify-center gap-3 text-[11px] font-black uppercase tracking-[0.4em] text-primary border-primary/40 bg-primary/5 hover:bg-primary/15 transition-all"
-              >
-                <RotateCcw className="w-4 h-4" /> Retry Same
-              </button>
-              <button
-                onClick={() => initializeEngine()}
-                className="flex-1 grid-box py-4 flex items-center justify-center gap-3 text-[11px] font-bold uppercase tracking-[0.4em] text-on-surface-variant/60 hover:text-on-surface hover:border-white/20 hover:bg-white/5 transition-all"
-              >
-                <RefreshCw className="w-4 h-4" /> New Test
-              </button>
-              {user && (
-                <Link
-                  href="/profile"
-                  className="flex-1 grid-box py-4 flex items-center justify-center gap-3 text-[11px] font-bold uppercase tracking-[0.4em] text-on-surface-variant/40 hover:text-on-surface-variant hover:border-white/15 transition-all"
+            {/* Right side: Graph + Action Buttons */}
+            <div className="md:col-span-7 flex flex-col justify-between gap-3">
+              {/* Graph Card */}
+              {wpmHistory.length > 1 ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.18 }}
+                  className="grid-box p-5 bg-white/[0.01] flex-1 flex flex-col min-h-[220px]"
                 >
-                  <BarChart3 className="w-4 h-4" /> My Stats
-                </Link>
+                  <div className="flex items-center gap-3 mb-4 shrink-0">
+                    <TrendingUp className="w-4 h-4 text-primary/40" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.45em] text-on-surface-variant/40">Performance Graph</span>
+                    {quoteSource && (
+                      <span className="ml-auto text-[9px] text-primary/30 font-bold uppercase tracking-wide truncate max-w-[200px]">— {quoteSource}</span>
+                    )}
+                  </div>
+                  
+                  {/* Graph Canvas */}
+                  <div className="flex-1 flex gap-4 min-h-0 relative items-stretch py-2">
+                    {/* Y Axis labels */}
+                    <div className="flex flex-col justify-between text-[8px] font-bold text-on-surface-variant/20 uppercase w-5 text-right shrink-0">
+                      <span>{maxVal}</span>
+                      <span>{Math.round(maxVal / 2)}</span>
+                      <span>0</span>
+                    </div>
+                    
+                    {/* SVG container */}
+                    <div className="flex-1 relative min-h-0">
+                      <svg className="w-full h-full" viewBox="0 0 1000 160" preserveAspectRatio="none">
+                        <defs>
+                          {/* Glow filter for WPM line */}
+                          <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="3.5" result="blur" />
+                            <feMerge>
+                              <feMergeNode in="blur" />
+                              <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                          </filter>
+                          {/* Smooth gradient area below WPM line */}
+                          <linearGradient id="area-grad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.16} />
+                            <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0.00} />
+                          </linearGradient>
+                        </defs>
+
+                        {/* Horizontal background gridlines */}
+                        <line x1="0" y1="0" x2="1000" y2="0" stroke="rgba(255,255,255,0.015)" strokeWidth="1" />
+                        <line x1="0" y1="40" x2="1000" y2="40" stroke="rgba(255,255,255,0.02)" strokeDasharray="3 4" strokeWidth="1" />
+                        <line x1="0" y1="80" x2="1000" y2="80" stroke="rgba(255,255,255,0.02)" strokeDasharray="3 4" strokeWidth="1" />
+                        <line x1="0" y1="120" x2="1000" y2="120" stroke="rgba(255,255,255,0.02)" strokeDasharray="3 4" strokeWidth="1" />
+                        <line x1="0" y1="160" x2="1000" y2="160" stroke="rgba(255,255,255,0.015)" strokeWidth="1" />
+
+                        {/* Vertical background gridlines */}
+                        {Array.from({ length: 5 }).map((_, idx) => {
+                          const x = (idx + 1) * 166.6;
+                          return (
+                            <line key={idx} x1={x} y1="0" x2={x} y2="160" stroke="rgba(255,255,255,0.015)" strokeDasharray="2 6" strokeWidth="1" />
+                          );
+                        })}
+
+                        {/* Raw line - subtle dashed line in background */}
+                        <motion.path
+                          d={graphData.raw}
+                          fill="none"
+                          stroke="rgba(255,255,255,0.12)"
+                          strokeWidth="1.5"
+                          strokeDasharray="4 4"
+                          strokeLinejoin="round"
+                          initial={{ pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          transition={{ duration: 1.0, ease: "easeOut", delay: 0.1 }}
+                        />
+                        
+                        {/* WPM area filled */}
+                        <motion.path
+                          d={graphData.wpmArea}
+                          fill="url(#area-grad)"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.8, delay: 0.3 }}
+                        />
+                        
+                        {/* WPM line - glowing neon line */}
+                        <motion.path
+                          d={graphData.wpm}
+                          fill="none"
+                          stroke="var(--color-primary)"
+                          strokeWidth="2.5"
+                          filter="url(#neon-glow)"
+                          strokeLinejoin="round"
+                          strokeLinecap="round"
+                          initial={{ pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          transition={{ duration: 0.8, ease: "easeOut" }}
+                        />
+                        
+                        {/* Error dots */}
+                        {graphData.errorDots.map((e, i) => (
+                          <circle key={i} cx={e.x} cy={e.y} r="3.5" fill="var(--color-error)" opacity="0.85" />
+                        ))}
+
+                        {/* Vertical hover line indicator */}
+                        {hoveredIndex !== null && graphData.wpmPoints[hoveredIndex] && (
+                          <line
+                            x1={graphData.wpmPoints[hoveredIndex][0]}
+                            y1={0}
+                            x2={graphData.wpmPoints[hoveredIndex][0]}
+                            y2={160}
+                            stroke="rgba(255, 255, 255, 0.15)"
+                            strokeDasharray="3 3"
+                            strokeWidth="1.5"
+                            pointerEvents="none"
+                          />
+                        )}
+
+                        {/* Hover active dots */}
+                        {hoveredIndex !== null && graphData.wpmPoints[hoveredIndex] && graphData.rawPoints[hoveredIndex] && (
+                          <>
+                            {/* WPM dot */}
+                            <circle
+                              cx={graphData.wpmPoints[hoveredIndex][0]}
+                              cy={graphData.wpmPoints[hoveredIndex][1]}
+                              r="5"
+                              fill="var(--color-primary)"
+                              stroke="#111111"
+                              strokeWidth="2"
+                              pointerEvents="none"
+                            />
+                            {/* Raw dot */}
+                            <circle
+                              cx={graphData.rawPoints[hoveredIndex][0]}
+                              cy={graphData.rawPoints[hoveredIndex][1]}
+                              r="4"
+                              fill="rgba(255, 255, 255, 0.4)"
+                              stroke="#111111"
+                              strokeWidth="1.5"
+                              pointerEvents="none"
+                            />
+                          </>
+                        )}
+
+                        {/* Interactive hover zones */}
+                        {wpmHistory.map((h, i) => {
+                          const sliceWidth = 1000 / wpmHistory.length;
+                          const x = i * (1000 / Math.max(wpmHistory.length - 1, 1));
+                          const rectWidth = i === 0 || i === wpmHistory.length - 1 ? sliceWidth / 2 : sliceWidth;
+                          const rectX = i === 0 ? 0 : x - sliceWidth / 2;
+
+                          return (
+                            <rect
+                              key={i}
+                              x={rectX}
+                              y={0}
+                              width={rectWidth}
+                              height={160}
+                              fill="transparent"
+                              className="cursor-pointer"
+                              onMouseEnter={() => setHoveredIndex(i)}
+                              onMouseLeave={() => setHoveredIndex(null)}
+                            />
+                          );
+                        })}
+                      </svg>
+
+                      {/* Hover Tooltip Box */}
+                      {hoveredIndex !== null && wpmHistory[hoveredIndex] && graphData.wpmPoints[hoveredIndex] && (
+                        <div
+                          className="absolute z-30 pointer-events-none bg-[#161616]/95 border border-white/10 p-2.5 rounded-[2px] text-[10px] flex flex-col gap-1 shadow-2xl font-mono"
+                          style={{
+                            left: `${(graphData.wpmPoints[hoveredIndex][0] / 1000) * 100}%`,
+                            top: '12px',
+                            transform: hoveredIndex === 0 
+                              ? 'translateX(12px)' 
+                              : hoveredIndex === wpmHistory.length - 1 
+                                ? 'translateX(-100%) translateX(-12px)' 
+                                : 'translateX(-50%)',
+                          }}
+                        >
+                          <div className="text-on-surface-variant/40 font-bold uppercase tracking-wider">Second {wpmHistory[hoveredIndex].time}</div>
+                          <div className="flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                            <span className="text-on-surface">WPM: <strong className="text-primary font-black">{wpmHistory[hoveredIndex].wpm}</strong></span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white/40" />
+                            <span className="text-on-surface-variant/70">Raw: <strong className="font-bold">{wpmHistory[hoveredIndex].raw}</strong></span>
+                          </div>
+                          {wpmHistory[hoveredIndex].errors > 0 && (
+                            <div className="flex items-center gap-2 text-error">
+                              <span className="w-1.5 h-1.5 rounded-full bg-error" />
+                              <span>Errors: <strong className="font-bold">{wpmHistory[hoveredIndex].errors}</strong></span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Graph Footer Legend */}
+                  <div className="flex justify-between mt-3 text-[8px] font-bold text-on-surface-variant/20 uppercase tracking-widest shrink-0">
+                    <span>Start</span>
+                    <div className="flex items-center gap-5">
+                      <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-0.5 bg-primary/60" /> WPM</span>
+                      <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-px bg-white/20 border-t border-dashed" /> Raw</span>
+                      <span className="flex items-center gap-1.5"><span className="inline-block w-1.5 h-1.5 rounded-full bg-error/70" /> Errors</span>
+                    </div>
+                    <span>{timeElapsed}s</span>
+                  </div>
+                </motion.div>
+              ) : (
+                <div className="grid-box p-6 bg-white/[0.01] flex-1 flex items-center justify-center min-h-[220px]">
+                  <span className="text-xs text-on-surface-variant/30 uppercase tracking-wider">No graph data available</span>
+                </div>
               )}
-            </motion.div>
+
+              {/* Action Buttons */}
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.24 }}
+                className="flex gap-2.5 shrink-0"
+              >
+                <button
+                  onClick={() => initializeEngine(options)}
+                  className="flex-1 grid-box py-3.5 flex items-center justify-center gap-2.5 text-[10px] font-black uppercase tracking-[0.35em] text-primary border-primary/30 bg-primary/5 hover:bg-primary/10 transition-all cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" /> Retry Same
+                </button>
+                <button
+                  onClick={() => initializeEngine()}
+                  className="flex-1 grid-box py-3.5 flex items-center justify-center gap-2.5 text-[10px] font-bold uppercase tracking-[0.35em] text-on-surface-variant/50 hover:text-on-surface hover:border-white/15 hover:bg-white/4 transition-all cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" /> New Test
+                </button>
+                {user && (
+                  <Link
+                    href="/profile"
+                    className="flex-1 grid-box py-3.5 flex items-center justify-center gap-2.5 text-[10px] font-bold uppercase tracking-[0.35em] text-on-surface-variant/40 hover:text-on-surface-variant hover:border-white/15 hover:bg-white/4 transition-all"
+                  >
+                    <BarChart3 className="w-3.5 h-3.5" /> My Stats
+                  </Link>
+                )}
+              </motion.div>
+            </div>
 
           </div>
         </div>
@@ -349,7 +558,7 @@ export default function Practice() {
 
   // ── TYPING / IDLE SCREEN ─────────────────────────────────────────
   return (
-    <div className="h-[calc(100vh-64px)] mt-16 flex flex-col font-mono text-on-surface overflow-hidden relative selection:bg-primary/10">
+    <div className="h-[calc(100vh-3.5rem)] mt-14 flex flex-col font-mono text-on-surface overflow-hidden relative selection:bg-primary/10">
 
       {/* ── Custom Mode Sidebar ─────────────────────────────────── */}
       <AnimatePresence>

@@ -467,7 +467,7 @@ export default function LearnPage() {
   );
 
   return (
-    <div className="flex h-[calc(100vh-64px)] mt-16 overflow-hidden font-mono text-on-surface">
+    <div className="flex h-[calc(100vh-3.5rem)] mt-14 overflow-hidden font-mono text-on-surface">
 
       {/* ── Desktop Sidebar ── */}
       <aside className="hidden lg:flex flex-col w-[268px] flex-shrink-0 border-r border-white/5 bg-surface-container-low overflow-hidden">
@@ -486,7 +486,7 @@ export default function LearnPage() {
             <motion.aside
               initial={{ x: -280 }} animate={{ x: 0 }} exit={{ x: -280 }}
               transition={{ type: 'spring', damping: 25, stiffness: 280 }}
-              className="fixed left-0 top-16 bottom-0 w-[268px] z-50 border-r border-white/5 bg-surface-container-low overflow-hidden flex flex-col lg:hidden"
+              className="fixed left-0 top-14 bottom-0 w-[268px] z-50 border-r border-white/5 bg-surface-container-low overflow-hidden flex flex-col lg:hidden"
             >
               <div className="flex items-center justify-between p-4 border-b border-white/5">
                 <span className="text-xs font-black uppercase tracking-[0.3em] text-primary">Lessons</span>

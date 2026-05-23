@@ -37,7 +37,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center p-6 tracking-wide font-mono bg-background mt-16 overflow-hidden relative">
+    <div className="min-h-[calc(100vh-3.5rem)] flex items-center justify-center p-6 tracking-wide font-mono bg-background mt-14 overflow-hidden relative">
       {/* Decorative background grid and blurs */}
       <div className="absolute inset-0 -z-10 pointer-events-none" style={{
         backgroundImage: 'linear-gradient(to right,#ffffff02 1px,transparent 1px),linear-gradient(to bottom,#ffffff02 1px,transparent 1px)',
@@ -46,7 +46,7 @@ export default function Login() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-primary/5 rounded-full blur-[100px] -z-10" />
 
       <div className="w-full max-w-md relative">
-        <div className="grid-box border-white/10 bg-zinc-950/80 p-8 md:p-12 relative overflow-hidden group shadow-2xl">
+        <div className="grid-box border-white/10 bg-zinc-950/80 p-6 sm:p-8 md:p-12 relative overflow-hidden group shadow-2xl">
           {/* Top Status/Glow Bar */}
           <div className="absolute top-0 left-0 w-full h-[2px] bg-primary/20">
             <motion.div 

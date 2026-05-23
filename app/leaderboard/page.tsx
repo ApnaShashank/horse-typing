@@ -56,7 +56,7 @@ export default function Leaderboard() {
           </p>
         </div>
 
-        <div className="flex bg-surface-container-low p-1.5 rounded-lg border border-white/5 shadow-lg select-none">
+        <div className="flex flex-wrap justify-center bg-surface-container-low p-1.5 rounded-lg border border-white/5 shadow-lg select-none max-w-full">
           {modes.map(m => (
             <button 
               key={m.id}

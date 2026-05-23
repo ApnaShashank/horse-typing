@@ -189,15 +189,7 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Left */}
             <div>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/3 mb-8"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-correct animate-pulse" />
-                <span className="text-[11px] font-semibold text-on-surface-variant/70 tracking-wider">Free · No ads · Open rankings</span>
-              </motion.div>
+
 
               <motion.h1
                 initial={{ opacity: 0, y: 24 }}
@@ -244,7 +236,7 @@ export default function Home() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.5 }}
-                className="flex items-center gap-6 mt-10 pt-8 border-t border-white/5"
+                className="flex flex-wrap items-center gap-6 mt-10 pt-8 border-t border-white/5"
               >
                 {[
                   { value: '15s / 30s / 60s', label: 'Timed modes' },
@@ -418,7 +410,7 @@ export default function Home() {
               </div>
 
               {/* CTA inside */}
-              <div className="rounded-xl border border-white/6 bg-surface-container-low p-6 flex items-center gap-5">
+              <div className="rounded-xl border border-white/6 bg-surface-container-low p-6 flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-5 text-center sm:text-left">
                 <div className="w-10 h-10 rounded-lg bg-primary/8 border border-primary/15 flex items-center justify-center text-primary shrink-0">
                   <CheckCircle className="w-5 h-5" />
                 </div>
@@ -426,7 +418,7 @@ export default function Home() {
                   <div className="text-sm font-bold text-on-surface mb-0.5">Save your progress</div>
                   <p className="text-xs text-on-surface-variant/40 leading-relaxed">Create a free account and every test result is saved permanently to your history.</p>
                 </div>
-                <Link href="/register" className="shrink-0 px-4 py-2 rounded-lg bg-primary/10 border border-primary/25 text-primary text-xs font-bold hover:bg-primary/20 transition-colors">
+                <Link href="/register" className="w-full sm:w-auto text-center px-4 py-2 rounded-lg bg-primary/10 border border-primary/25 text-primary text-xs font-bold hover:bg-primary/20 transition-colors shrink-0">
                   Sign up free
                 </Link>
               </div>
@@ -460,12 +452,12 @@ export default function Home() {
             className="rounded-xl border border-white/8 overflow-hidden"
           >
             {/* Header row */}
-            <div className="grid grid-cols-[48px_1fr_80px_80px_100px] gap-4 px-6 py-4 bg-surface-container-low border-b border-white/5 text-[9px] font-black uppercase tracking-[0.3em] text-on-surface-variant/30">
+            <div className="grid grid-cols-[32px_1fr_50px_60px] sm:grid-cols-[48px_1fr_80px_80px_100px] gap-2 sm:gap-4 px-4 sm:px-6 py-4 bg-surface-container-low border-b border-white/5 text-[9px] font-black uppercase tracking-[0.25em] sm:tracking-[0.3em] text-on-surface-variant/30">
               <span>#</span>
               <span>Typist</span>
               <span className="text-center">WPM</span>
               <span className="text-center">Acc</span>
-              <span className="text-right">Mode</span>
+              <span className="text-right hidden sm:block">Mode</span>
             </div>
 
             {[
@@ -481,13 +473,13 @@ export default function Home() {
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.06 }}
-                className="grid grid-cols-[48px_1fr_80px_80px_100px] gap-4 px-6 py-4.5 border-b border-white/4 hover:bg-white/[0.015] transition-colors items-center cursor-default"
+                className="grid grid-cols-[32px_1fr_50px_60px] sm:grid-cols-[48px_1fr_80px_80px_100px] gap-2 sm:gap-4 px-4 sm:px-6 py-4.5 border-b border-white/4 hover:bg-white/[0.015] transition-colors items-center cursor-default"
               >
                 <span className={`text-sm font-black ${row.medal || 'text-on-surface-variant/30'}`}>{row.rank}</span>
                 <span className="text-sm font-semibold text-on-surface/80 truncate">{row.name}</span>
                 <span className="text-center text-sm font-black text-primary">{row.wpm}</span>
                 <span className="text-center text-sm font-semibold text-on-surface-variant/60">{row.acc}%</span>
-                <span className="text-right text-[10px] font-bold text-on-surface-variant/30 uppercase tracking-wider">{row.mode}</span>
+                <span className="text-right text-[10px] font-bold text-on-surface-variant/30 uppercase tracking-wider hidden sm:block">{row.mode}</span>
               </motion.div>
             ))}
 
