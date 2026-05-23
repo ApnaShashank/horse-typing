@@ -78,13 +78,14 @@ export default function Practice() {
     status, words, typedHistory, currentWordInput, activeWordIndex,
     timeRemaining, timeElapsed, wpm, raw, accuracy,
     correctChars, incorrectChars, extraChars, missedChars, consistency,
-    options, wpmHistory, handleTyping, initializeEngine
+    options, wpmHistory, quoteSource, handleTyping, initializeEngine
   } = useTypingEngine({
     mode: 'time',
     language: 'english',
     punctuation: false,
     numbers: false,
     wordCount: 15,
+    quoteLength: 'all',
   }, handleTestFinish);
 
   const wordsContainerRef = useRef<HTMLDivElement>(null);
@@ -145,7 +146,15 @@ export default function Practice() {
   }, [initializeEngine]);
 
   const handleModeChange = (mode: GenerationOptions['mode']) => {
-    const newOptions = { ...options, mode };
+    const newOptions: GenerationOptions = { ...options, mode };
+    // Reset mode-specific defaults
+    if (mode === 'time') {
+      newOptions.wordCount = 15; // 15 seconds default
+    } else if (mode === 'words') {
+      newOptions.wordCount = 25; // 25 words default
+    } else if (mode === 'quote') {
+      newOptions.quoteLength = 'all';
+    }
     initializeEngine(newOptions);
   };
 
@@ -171,6 +180,32 @@ export default function Practice() {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = 'auto'; };
   }, []);
+
+  // ── Mode-specific sub-options rendering ──
+  const renderSubOptions = () => {
+    if (options.mode === 'time') {
+      return [15, 30, 60, 120].map(v => (
+        <button key={v} onClick={() => initializeEngine({ ...options, wordCount: v })} className={`transition-all ${options.wordCount === v ? 'text-primary font-black' : 'hover:text-on-surface'}`}>{v}</button>
+      ));
+    }
+    if (options.mode === 'words') {
+      return [10, 25, 50, 100].map(v => (
+        <button key={v} onClick={() => initializeEngine({ ...options, wordCount: v })} className={`transition-all ${options.wordCount === v ? 'text-primary font-black' : 'hover:text-on-surface'}`}>{v}</button>
+      ));
+    }
+    if (options.mode === 'quote') {
+      return (['all', 'short', 'medium', 'long'] as const).map(v => (
+        <button key={v} onClick={() => initializeEngine({ ...options, quoteLength: v })} className={`transition-all ${options.quoteLength === v ? 'text-primary font-black' : 'hover:text-on-surface'}`}>{v}</button>
+      ));
+    }
+    if (options.mode === 'custom') {
+      return (
+        <button onClick={() => setIsSidebarOpen(true)} className="hover:text-on-surface flex items-center gap-2"><Settings2 className="w-4 h-4"/> CONFIG</button>
+      );
+    }
+    // Zen mode: no sub-options
+    return null;
+  };
 
   return (
     <div className="h-[calc(100vh-64px)] mt-16 flex flex-col font-mono text-on-surface overflow-hidden relative selection:bg-white/10">
@@ -198,25 +233,39 @@ export default function Practice() {
       {/* Main Control Bar (Grid Aligned) */}
       <div className="w-full border-b border-white/5 bg-background/30 backdrop-blur-md z-40">
         <div className="max-w-[1250px] mx-auto px-6 h-16 flex items-center justify-between">
-           <div className="flex items-center gap-10 text-[12px] font-bold uppercase tracking-[0.2em] text-on-surface-variant/40">
-              <div className="flex gap-6 border-r border-white/5 pr-10">
-                <button onClick={() => initializeEngine({ ...options, punctuation: !options.punctuation })} className={`hover:text-on-surface transition-colors ${options.punctuation ? 'text-primary' : ''}`}>@ Punc</button>
-                <button onClick={() => initializeEngine({ ...options, numbers: !options.numbers })} className={`hover:text-on-surface transition-colors ${options.numbers ? 'text-primary' : ''}`}># Num</button>
+           <div className="flex items-center gap-6 sm:gap-10 text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-on-surface-variant/40 overflow-x-auto no-scrollbar">
+              {/* Punctuation & Numbers toggles */}
+              <div className="flex gap-4 sm:gap-6 border-r border-white/5 pr-6 sm:pr-10 shrink-0">
+                <button onClick={() => initializeEngine({ ...options, punctuation: !options.punctuation })} className={`hover:text-on-surface transition-colors whitespace-nowrap ${options.punctuation ? 'text-primary' : ''}`}>@ Punc</button>
+                <button onClick={() => initializeEngine({ ...options, numbers: !options.numbers })} className={`hover:text-on-surface transition-colors whitespace-nowrap ${options.numbers ? 'text-primary' : ''}`}># Num</button>
               </div>
-              <div className="flex gap-8 border-r border-white/5 pr-10">
-                {[{id:'time',icon:<Clock className="w-4 h-4"/>},{id:'words',icon:<Type className="w-4 h-4"/>},{id:'quote',icon:<Quote className="w-4 h-4"/>},{id:'zen',icon:<Mountain className="w-4 h-4"/>},{id:'custom',icon:<Wrench className="w-4 h-4"/>}].map(m=>(<button key={m.id} onClick={()=>handleModeChange(m.id as any)} className={`transition-colors flex items-center gap-3 ${options.mode===m.id?'text-primary':'hover:text-on-surface'}`}>{m.icon}{m.id}</button>))}
+              
+              {/* Mode selectors */}
+              <div className="flex gap-4 sm:gap-8 border-r border-white/5 pr-6 sm:pr-10 shrink-0">
+                {[
+                  { id: 'time', icon: <Clock className="w-4 h-4"/> },
+                  { id: 'words', icon: <Type className="w-4 h-4"/> },
+                  { id: 'quote', icon: <Quote className="w-4 h-4"/> },
+                  { id: 'zen', icon: <Mountain className="w-4 h-4"/> },
+                  { id: 'custom', icon: <Wrench className="w-4 h-4"/> },
+                ].map(m => (
+                  <button key={m.id} onClick={() => handleModeChange(m.id as any)} className={`transition-colors flex items-center gap-2 sm:gap-3 whitespace-nowrap ${options.mode === m.id ? 'text-primary' : 'hover:text-on-surface'}`}>
+                    {m.icon}{m.id}
+                  </button>
+                ))}
               </div>
-              <div className="flex gap-6">
-                {['time','words'].includes(options.mode)&&[15,30,60,120].map(v=>(<button key={v} onClick={()=>initializeEngine({...options,wordCount:v})} className={`transition-all ${options.wordCount===v?'text-primary font-black':'hover:text-on-surface'}`}>{v}</button>))}
-                {options.mode==='custom'&&<button onClick={() => setIsSidebarOpen(true)} className="hover:text-on-surface flex items-center gap-2"><Settings2 className="w-4 h-4"/> CONFIG</button>}
+              
+              {/* Sub-options (duration/count/length) */}
+              <div className="flex gap-4 sm:gap-6 shrink-0">
+                {renderSubOptions()}
               </div>
            </div>
            
            {status === 'running' && (
-             <div className="flex items-center gap-4 text-xs font-bold text-primary/40">
+             <div className="flex items-center gap-4 text-xs font-bold text-primary/40 shrink-0 ml-4">
                <span className="animate-pulse">PROCESSED: {activeWordIndex}</span>
                <span className="w-1 h-1 rounded-full bg-white/10" />
-               <span>{options.mode==='time'?`${timeRemaining}s`:`${timeElapsed}s`}</span>
+               <span>{options.mode === 'time' ? `${timeRemaining}s` : `${timeElapsed}s`}</span>
              </div>
            )}
         </div>
@@ -234,7 +283,12 @@ export default function Practice() {
                      <div><div className="text-[13px] font-bold text-on-surface-variant/40 uppercase tracking-[0.3em] mb-6">Accuracy</div><div className="text-9xl font-black text-primary tracking-tighter leading-none">{accuracy}%</div></div>
                    </div>
                    <div className="grid-box p-12 relative flex flex-col">
-                      <div className="flex justify-between items-center mb-10 border-b border-white/5 pb-6"><span className="text-[13px] font-bold text-on-surface-variant/40 uppercase tracking-[0.3em]">Performance Graph</span><span className="text-[11px] font-bold text-primary/40 uppercase tracking-[0.1em]">{options.mode} test</span></div>
+                      <div className="flex justify-between items-center mb-10 border-b border-white/5 pb-6">
+                        <span className="text-[13px] font-bold text-on-surface-variant/40 uppercase tracking-[0.3em]">Performance Graph</span>
+                        <span className="text-[11px] font-bold text-primary/40 uppercase tracking-[0.1em]">
+                          {options.mode} test {quoteSource ? `· ${quoteSource}` : ''}
+                        </span>
+                      </div>
                       <div className="flex-1 relative">
                         <div className="absolute left-[-25px] h-full flex flex-col justify-between text-[10px] font-bold text-on-surface-variant/20 uppercase"><span>{Math.max(...wpmHistory.map(h=>Math.max(h.wpm,h.raw,40)))}</span><span>0</span></div>
                         <svg className="w-full h-full" viewBox="0 0 1000 200" preserveAspectRatio="none"><path d={graphPath.raw} fill="none" stroke="#222222" strokeWidth="1" strokeLinejoin="round"/><path d={graphPath.wpm} fill="none" stroke="var(--color-primary)" strokeWidth="2" strokeLinejoin="round" />{graphPath.errors.map((e,i)=>(<circle key={i} cx={e.x} cy={e.y} r="3" fill="#ff5252" />))}</svg>
@@ -258,6 +312,13 @@ export default function Practice() {
             <div className="relative w-full cursor-text" onClick={()=>{hiddenInputRef.current?.focus();setIsFocused(true);}} onBlur={()=>setIsFocused(false)}>
               <input ref={hiddenInputRef} type="text" className="absolute opacity-0 -z-10 w-1 h-1 pointer-events-none" value={currentWordInput} onChange={(e)=>handleTyping(e.target.value)} onFocus={()=>setIsFocused(true)} onBlur={()=>setIsFocused(false)} autoFocus autoCapitalize="none" autoComplete="off" autoCorrect="off" spellCheck="false" />
               
+              {/* Quote source indicator */}
+              {options.mode === 'quote' && quoteSource && (
+                <div className="mb-6 text-center">
+                  <span className="text-[10px] font-bold text-primary/30 uppercase tracking-[0.4em]">Quote by {quoteSource}</span>
+                </div>
+              )}
+
               <div className="relative w-full overflow-hidden h-[184px]">
                 <div ref={wordsContainerRef} className={`absolute top-0 left-0 w-full text-[32px] md:text-[36px] flex flex-wrap content-start select-none transition-all duration-300 ${!isFocused?'opacity-5 blur-[2px]':''}`} style={{ transform: `translateY(-${lineOffset}px)` }}>
                   {isFocused && (
@@ -270,15 +331,32 @@ export default function Practice() {
                 {!isFocused && <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/20 backdrop-blur-[1px]"><div className="text-[10px] font-bold text-primary/40 uppercase tracking-[0.5em] flex items-center gap-4"><div className="w-12 h-[1px] bg-primary/20" /> CLICK TO RESUME <div className="w-12 h-[1px] bg-primary/20" /></div></div>}
               </div>
 
-              <div className="mt-24 flex justify-between items-center text-on-surface-variant/10 text-[9px] font-bold uppercase tracking-[0.4em]">
-                 <div className="flex gap-8"><span>TAB : RESTART</span><span>ESC : CONFIG</span></div>
-                 <div className="flex items-center gap-4"><span>ENGINE v2.4</span><div className="w-2 h-2 grid-box bg-primary/10" /></div>
+              {/* Restart Button & Footer Info */}
+              <div className="mt-12 flex flex-col items-center gap-8">
+                 <button 
+                   onClick={(e) => { e.stopPropagation(); initializeEngine(options); hiddenInputRef.current?.focus(); }} 
+                   className="text-on-surface-variant/40 hover:text-primary transition-all p-3 rounded-full hover:bg-white/5 active:scale-95"
+                   title="Restart Test"
+                 >
+                   <RotateCcw className="w-6 h-6" />
+                 </button>
+
+                 <div className="w-full flex justify-between items-center text-on-surface-variant/10 text-[9px] font-bold uppercase tracking-[0.4em]">
+                    <div className="flex gap-8"><span>TAB : RESTART</span><span>ESC : CONFIG</span></div>
+                    <div className="flex items-center gap-4">
+                      <span>
+                        {options.mode === 'zen' ? 'ZEN · ∞' : 
+                         options.mode === 'quote' ? `QUOTE · ${options.quoteLength || 'all'}` :
+                         `ENGINE v2.4`}
+                      </span>
+                      <div className="w-2 h-2 grid-box bg-primary/10" />
+                    </div>
+                 </div>
               </div>
             </div>
           )}
         </div>
       </main>
-
       <style jsx global>{`
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .char { transition: color 0.1s ease-out, background 0.1s; }

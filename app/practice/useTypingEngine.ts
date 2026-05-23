@@ -16,6 +16,7 @@ export function useTypingEngine(defaultOptions: GenerationOptions, onFinish?: (s
   const [words, setWords] = useState<string[]>([]);
   const [typedHistory, setTypedHistory] = useState<string[]>([]);
   const [currentWordInput, setCurrentWordInput] = useState<string>('');
+  const [quoteSource, setQuoteSource] = useState<string>('');
   
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [timeElapsed, setTimeElapsed] = useState<number>(0);
@@ -50,7 +51,7 @@ export function useTypingEngine(defaultOptions: GenerationOptions, onFinish?: (s
             extraChars++;
           }
         }
-        correctChars++; 
+        correctChars++; // space
       } else {
         for (let j = 0; j < typed.length; j++) {
            if (j < target.length) {
@@ -100,28 +101,63 @@ export function useTypingEngine(defaultOptions: GenerationOptions, onFinish?: (s
   const initializeEngine = useCallback(async (opts: GenerationOptions = options) => {
     setStatus('loading');
     setOptions(opts);
+    setQuoteSource('');
 
     let newWords: string[] = [];
+
     if (opts.mode === 'custom') {
+      // Custom mode: parse user text
       newWords = (opts.customText?.trim() || 'custom').split(opts.delimiter === 'pipe' ? '|' : ' ').filter(Boolean);
       if (opts.shuffle) newWords.sort(() => Math.random() - 0.5);
-    } else {
+    } else if (opts.mode === 'quote') {
+      // Quote mode: fetch from API with length filter
       try {
         const queryParams = new URLSearchParams({
-           mode: opts.mode,
-           count: (opts.wordCount || (opts.mode === 'time' ? 100 : 50)).toString(),
-           punctuation: (opts.punctuation || false).toString(),
-           numbers: (opts.numbers || false).toString()
+          mode: 'quote',
+          quoteLength: opts.quoteLength || 'all',
         });
         const res = await fetch(`/api/text?${queryParams}`);
-        if(res.ok) {
-           const data = await res.json();
-           newWords = data.words;
+        if (res.ok) {
+          const data = await res.json();
+          newWords = data.words;
+          setQuoteSource(data.source || '');
         } else {
-           newWords = ['typing', 'precision', 'engine', 'ready'];
+          // Fallback to local quotes
+          newWords = generateText(opts);
         }
-      } catch (e) {
-        newWords = ['offline', 'mode', 'active'];
+      } catch {
+        newWords = generateText(opts);
+      }
+    } else {
+      // Time, Words, Zen modes: fetch from DB
+      try {
+        let wordCount: number;
+        if (opts.mode === 'words') {
+          wordCount = opts.wordCount || 25;
+        } else if (opts.mode === 'zen') {
+          wordCount = 80;
+        } else {
+          // Time mode: generate plenty of words based on duration
+          // Fast typists can do ~150 wpm = ~2.5 words/sec
+          const duration = opts.wordCount || 15;
+          wordCount = Math.max(100, Math.ceil(duration * 3));
+        }
+
+        const queryParams = new URLSearchParams({
+          mode: opts.mode,
+          count: wordCount.toString(),
+          punctuation: (opts.punctuation || false).toString(),
+          numbers: (opts.numbers || false).toString()
+        });
+        const res = await fetch(`/api/text?${queryParams}`);
+        if (res.ok) {
+          const data = await res.json();
+          newWords = data.words;
+        } else {
+          newWords = generateText(opts);
+        }
+      } catch {
+        newWords = generateText(opts);
       }
     }
 
@@ -167,7 +203,7 @@ export function useTypingEngine(defaultOptions: GenerationOptions, onFinish?: (s
     try {
       const queryParams = new URLSearchParams({
         mode: options.mode,
-        count: '50',
+        count: '80',
         punctuation: (options.punctuation || false).toString(),
         numbers: (options.numbers || false).toString()
       });
@@ -186,7 +222,6 @@ export function useTypingEngine(defaultOptions: GenerationOptions, onFinish?: (s
   // Performance-based Timer Loop
   useEffect(() => {
     if (status === 'running') {
-      // Only set start time once per running session
       if (startTimeRef.current === 0) {
         startTimeRef.current = performance.now();
         lastSecondRef.current = 0;
@@ -196,7 +231,6 @@ export function useTypingEngine(defaultOptions: GenerationOptions, onFinish?: (s
         const elapsed = (now - startTimeRef.current) / 1000;
         const currentSecond = Math.floor(elapsed);
 
-        // Update real-time counters
         if (currentSecond > lastSecondRef.current) {
           lastSecondRef.current = currentSecond;
           
@@ -242,15 +276,20 @@ export function useTypingEngine(defaultOptions: GenerationOptions, onFinish?: (s
     const activeWordIndex = typedHistory.length;
     const targetWord = words[activeWordIndex];
 
-    // Replenish words if running low in time mode
-    if (options.mode === 'time' && activeWordIndex > words.length - 10) {
+    // Replenish words if running low in time or zen mode
+    if ((options.mode === 'time' || options.mode === 'zen') && activeWordIndex > words.length - 20) {
       fetchMoreWords();
     }
 
     if (value.endsWith(' ')) {
       setTypedHistory(prev => [...prev, value.trim()]);
       setCurrentWordInput('');
-      if ((options.mode === 'words' || options.mode === 'quote' || options.mode === 'custom') && activeWordIndex + 1 === words.length) {
+      
+      // Finish conditions based on mode
+      if (
+        (options.mode === 'words' || options.mode === 'quote' || options.mode === 'custom') && 
+        activeWordIndex + 1 === words.length
+      ) {
         finishTest(timeElapsed);
       }
       return;
@@ -289,6 +328,7 @@ export function useTypingEngine(defaultOptions: GenerationOptions, onFinish?: (s
     consistency,
     options,
     wpmHistory,
+    quoteSource,
     handleTyping,
     initializeEngine,
     setOptions,
