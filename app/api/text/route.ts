@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { quotes as localQuotes } from '@/app/practice/words';
+import { quotes as localQuotes, generateText } from '@/app/practice/words';
 
 // ── Punctuation Engine (MonkeyType-style) ──────────────────────
 function applyPunctuation(words: string[]): string[] {
@@ -112,6 +112,24 @@ export async function GET(request: Request) {
   const punctuation = searchParams.get('punctuation') === 'true';
   const numbers = searchParams.get('numbers') === 'true';
   const quoteLength = searchParams.get('quoteLength') || 'all';
+  const language = searchParams.get('language') || 'english';
+
+  if (language === 'hindi') {
+    try {
+      const resultWords = generateText({
+        mode: mode as any,
+        language: 'hindi',
+        punctuation,
+        numbers,
+        wordCount: count,
+        quoteLength: quoteLength as any,
+      });
+      return NextResponse.json({ words: resultWords });
+    } catch (err) {
+      console.error('Error generating Hindi text:', err);
+      return NextResponse.json({ words: ["नमस्ते", "और", "स्वागत", "है"] });
+    }
+  }
 
   try {
     // ── Quote Mode: return a random quote ──

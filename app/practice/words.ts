@@ -19,9 +19,12 @@ export const commonWords = [
 ];
 
 export const hindiWords = [
-  "hai", "aur", "ki", "mein", "ka", "ke", "ko", "se", "ek", "par", "hoga", "hain", "kya", "bhi", "yeh", "woh", "nahin", "jo", "hi", "kisi",
-  "kar", "liye", "hota", "un", "toh", "unhone", "kuch", "apne", "saath", "kaha", "jab", "tha", "diya", "is", "wala", "baat", "unki", "tarah",
-  "karenga", "apni", "raha", "baar", "karke", "ab", "hone", "hui", "mujhe", "tum", "mera", "karti", "dikha", "samay", "pehle", "baar", "aaj"
+  "है", "और", "की", "में", "का", "के", "को", "से", "एक", "पर", "होगा", "हैं", "क्या", "भी", "यह", "वह", "नहीं", "जो", "ही", "किसी",
+  "कर", "लिए", "होता", "उन", "तो", "उन्होंने", "कुछ", "अपने", "साथ", "कहा", "जब", "था", "दिया", "इस", "वाला", "बात", "उनकी", "तरह",
+  "करेगा", "अपनी", "रहा", "बार", "करके", "अब", "होने", "हुई", "मुझे", "तुम", "मेरा", "करती", "दिखा", "समय", "पहले", "आज",
+  "सब", "इसकी", "उस", "उसे", "उन्हें", "वहाँ", "यहाँ", "कैसे", "क्यों", "कितना", "कम", "ज्यादा", "काम", "लोग", "देश", "भारत", "राष्ट्र", "समाज",
+  "शिक्षा", "ज्ञान", "जीवन", "विकास", "दुनिया", "संसार", "सत्य", "धर्म", "कर्म", "प्रेम", "शांति", "सफलता", "मेहनत", "कठिन", "विश्वास", "विचार",
+  "मन", "दिल", "खुशी", "दुख", "सपना", "लक्ष्य", "मार्ग", "रास्ता", "मदद", "सहयोग", "मित्र", "दोस्त", "परिवार", "घर", "पानी", "हवा", "आकाश", "धरती"
 ];
 
 // ─── Quotes Database ─────────────────────────────────────────────
@@ -30,6 +33,7 @@ export type Quote = {
   text: string;
   source: string;
   length: 'short' | 'medium' | 'long';
+  language?: 'english' | 'hindi';
 };
 
 export const quotes: Quote[] = [
@@ -72,9 +76,19 @@ export const quotes: Quote[] = [
   { text: "You want to know how I got these scars? My father was a drinker, and a fiend. Some men just want to watch the world burn. Madness, as you know, is like gravity. All it takes is a little push. Why so serious? I believe whatever doesn't kill you, simply makes you stranger. This city deserves a better class of criminal, and I'm going to give it to them. Introduce a little anarchy. Upset the established order, and everything becomes chaos.", source: "The Joker / Dark Knight", length: "long" },
   { text: "I've been looking out of a window for eighteen years, dreaming about what I might feel like when I finally step outside. When I do, I want to feel something - not scared. I think everybody has that one person in their life that's their hero. That one person who taught them to be brave, who always believed in them when no one else did. For me, that person was my mother. She once told me that the purpose of life is to live it, to taste experience to the utmost, to reach out eagerly and without fear for newer and richer experience.", source: "Tangled & Eleanor Roosevelt", length: "long" },
   { text: "The most important thing in communication is hearing what isn't said. The art of communication is the language of leadership. We have two ears and one mouth, so that we can listen twice as much as we speak. The single biggest problem in communication is the illusion that it has taken place. Kind words can be short and easy to speak, but their echoes are truly endless. If you just communicate, you can get by. But if you communicate skillfully, you can work miracles.", source: "Various Authors", length: "long" },
+  
+  // ── HINDI QUOTES ──
+  { text: "कोशिश करने वालों की कभी हार नहीं होती। लहरों से डरकर नौका पार नहीं होती।", source: "हरिवंश राय बच्चन", length: "short", language: "hindi" },
+  { text: "उठो, जागो और तब तक मत रुको जब तक लक्ष्य प्राप्त न हो जाए।", source: "स्वामी विवेकानंद", length: "short", language: "hindi" },
+  { text: "सत्य और अहिंसा मेरे ईश्वर हैं। सत्य के बिना अहिंसा का अस्तित्व नहीं है।", source: "महात्मा गांधी", length: "short", language: "hindi" },
+  { text: "कर्म करो, फल की चिंता मत करो। मनुष्य अपने भाग्य का निर्माता स्वयं है।", source: "श्रीमद्भगवद्गीता", length: "short", language: "hindi" },
+  { text: "जो कल करना है उसे आज करो, और जो आज करना है उसे अभी करो। पल में प्रलय होगी, बहुरी करेगा कब।", source: "कबीरदास", length: "medium", language: "hindi" },
+  { text: "विपत्ति में धैर्य रखना, अनुकूल समय में क्षमा करना, और सदा सत्य मार्ग पर चलना ही सज्जनों के लक्षण हैं।", source: "चाणक्य", length: "medium", language: "hindi" },
+  { text: "स्वतंत्रता मेरा जन्मसिद्ध अधिकार है और मैं इसे लेकर रहूँगा। जब तक राष्ट्र में एकता और स्वाभिमान नहीं होगा, तब तक हम प्रगति नहीं कर सकते।", source: "बाल गंगाधर तिलक", length: "medium", language: "hindi" },
+  { text: "तुम मुझे खून दो, मैं तुम्हें आजादी दूंगा। संघर्ष के बिना कोई स्वतंत्रता नहीं मिल सकती। उठो और अपने अधिकारों के लिए लड़ो।", source: "नेताजी सुभाष चंद्र बोस", length: "medium", language: "hindi" },
+  { text: "चिंता ऐसी डाकिनी, काटि करेजा खाए। वैद बिचारा क्या करे, कहां तक दवा लगाए। कबीर इस संसार में सब दुखिया, सुखी कोई न दिखाय।", source: "कबीरदास", length: "medium", language: "hindi" },
+  { text: "मन के हारे हार है, मन के जीते जीत। कहे कबीर हरि पाइए, मन ही की परतीत। जब तक मन में विश्वास है, तब तक कोई पराजय स्थायी नहीं है।", source: "कबीरदास", length: "medium", language: "hindi" }
 ];
-
-
 
 // ─── Generation Options ──────────────────────────────────────────
 
@@ -176,8 +190,11 @@ export function generateText(options: GenerationOptions): string[] {
 
   if (options.mode === 'quote') {
     const lengthFilter = options.quoteLength || 'all';
-    const filtered = lengthFilter === 'all' ? quotes : quotes.filter(q => q.length === lengthFilter);
-    const q = filtered[Math.floor(Math.random() * filtered.length)];
+    const lang = options.language || 'english';
+    const langFiltered = quotes.filter(q => (q.language || 'english') === lang);
+    const filtered = lengthFilter === 'all' ? langFiltered : langFiltered.filter(q => q.length === lengthFilter);
+    const finalFiltered = filtered.length > 0 ? filtered : (lengthFilter === 'all' ? quotes.filter(q => (q.language || 'english') === 'english') : quotes.filter(q => q.length === lengthFilter && (q.language || 'english') === 'english'));
+    const q = finalFiltered[Math.floor(Math.random() * finalFiltered.length)];
     return q.text.split(' ');
   }
 
@@ -190,8 +207,10 @@ export function generateText(options: GenerationOptions): string[] {
     generated.push(dict[Math.floor(Math.random() * dict.length)]);
   }
 
-  if (options.punctuation && options.mode !== 'zen') generated = applyPunctuationLocal(generated);
-  if (options.numbers) generated = applyNumbersLocal(generated);
+  if (options.language !== 'hindi') {
+    if (options.punctuation && options.mode !== 'zen') generated = applyPunctuationLocal(generated);
+    if (options.numbers) generated = applyNumbersLocal(generated);
+  }
   
   return generated;
 }

@@ -10,6 +10,59 @@ export type WpmPoint = {
   errors: number;
 };
 
+export const IN_MAP: Record<string, string> = {
+  'q': 'ौ', 'Q': 'औ',
+  'w': 'ै', 'W': 'ऐ',
+  'e': 'ा', 'E': 'आ',
+  'r': 'ी', 'R': 'ई',
+  't': 'ू', 'T': 'ऊ',
+  'y': 'ब', 'Y': 'भ',
+  'u': 'ह', 'U': 'ङ',
+  'i': 'ग', 'I': 'घ',
+  'o': 'द', 'O': 'ध',
+  'p': 'ज', 'P': 'झ',
+  '[': 'ड', '{': 'ढ',
+  ']': '़', '}': 'ञ',
+  'a': 'ो', 'A': 'ओ',
+  's': 'े', 'S': 'ए',
+  'd': '्', 'D': 'अ',
+  'f': 'ि', 'F': 'इ',
+  'g': 'ु', 'G': 'उ',
+  'h': 'प', 'H': 'फ',
+  'j': 'र', 'J': 'ऱ',
+  'k': 'क', 'K': 'ख',
+  'l': 'त', 'L': 'थ',
+  ';': 'च', ':': 'छ',
+  "'": 'ट', '"': 'ठ',
+  'z': 'ॆ', 'Z': 'ऎ',
+  'x': 'ं', 'X': 'ँ',
+  'c': 'म', 'C': 'ण',
+  'v': 'न', 'V': 'ऩ',
+  'b': 'व', 'B': 'ऴ',
+  'n': 'ल', 'N': 'ळ',
+  'm': 'स', 'M': 'श',
+  ',': ',', '<': 'ष',
+  '.': '।', '>': '.',
+  '/': 'य', '?': 'य़',
+  '1': '१', '!': 'ऍ',
+  '2': '२', '@': 'ॅ',
+  '3': '३', '#': '्र',
+  '4': '४', '$': 'र्',
+  '5': '५', '%': 'ज्ञ',
+  '6': '६', '^': 'त्र',
+  '7': '७', '&': 'क्ष',
+  '8': '८', '*': 'श्र',
+  '9': '९', '(': '(',
+  '0': '०', ')': ')',
+  '-': '-', '_': 'ः',
+  '=': 'ृ', '+': 'ऋ',
+  '\\': 'ॉ', '|': 'ऑ',
+};
+
+export function translateEnglishToHindi(text: string): string {
+  return text.split('').map(char => IN_MAP[char] || char).join('');
+}
+
 export function useTypingEngine(defaultOptions: GenerationOptions, onFinish?: (stats: any) => void) {
   const [options, setOptions] = useState<GenerationOptions>(defaultOptions);
   const [status, setStatus] = useState<TypingStatus>('idle');
@@ -154,6 +207,9 @@ export function useTypingEngine(defaultOptions: GenerationOptions, onFinish?: (s
           punctuation: (opts.punctuation || false).toString(),
           numbers: (opts.numbers || false).toString()
         });
+        if (opts.language) {
+          queryParams.append('language', opts.language);
+        }
         const res = await fetch(`/api/text?${queryParams}`);
         if (res.ok) {
           const data = await res.json();
@@ -212,6 +268,9 @@ export function useTypingEngine(defaultOptions: GenerationOptions, onFinish?: (s
         punctuation: (options.punctuation || false).toString(),
         numbers: (options.numbers || false).toString()
       });
+      if (options.language) {
+        queryParams.append('language', options.language);
+      }
       const res = await fetch(`/api/text?${queryParams}`);
       if (res.ok) {
         const data = await res.json();
@@ -278,6 +337,11 @@ export function useTypingEngine(defaultOptions: GenerationOptions, onFinish?: (s
     if (status === 'finished') return;
     if (status === 'idle') setStatus('running');
 
+    let typedValue = value;
+    if (options.language === 'hindi') {
+      typedValue = translateEnglishToHindi(value);
+    }
+
     const activeWordIndex = typedHistory.length;
     const targetWord = words[activeWordIndex];
 
@@ -286,13 +350,13 @@ export function useTypingEngine(defaultOptions: GenerationOptions, onFinish?: (s
       fetchMoreWords();
     }
 
-    if (value.endsWith(' ')) {
+    if (typedValue.endsWith(' ')) {
       // Prevent advancing if space is entered but no text has been typed yet
-      if (value.trim() === '') {
+      if (typedValue.trim() === '') {
         setCurrentWordInput('');
         return;
       }
-      setTypedHistory(prev => [...prev, value.trim()]);
+      setTypedHistory(prev => [...prev, typedValue.trim()]);
       setCurrentWordInput('');
       
       // Finish conditions based on mode
@@ -305,10 +369,10 @@ export function useTypingEngine(defaultOptions: GenerationOptions, onFinish?: (s
       return;
     }
 
-    if (value.length > currentWordInput.length) {
-      const charIndex = value.length - 1;
+    if (typedValue.length > currentWordInput.length) {
+      const charIndex = typedValue.length - 1;
       if (targetWord && charIndex < targetWord.length) {
-        if (value[charIndex] !== targetWord[charIndex]) {
+        if (typedValue[charIndex] !== targetWord[charIndex]) {
           setWeakKeysMap(prev => ({ ...prev, [targetWord[charIndex]]: (prev[targetWord[charIndex]] || 0) + 1 }));
           setErrorsThisSecond(prev => prev + 1);
         }
@@ -317,7 +381,7 @@ export function useTypingEngine(defaultOptions: GenerationOptions, onFinish?: (s
       }
     }
 
-    setCurrentWordInput(value);
+    setCurrentWordInput(typedValue);
   };
 
   const currentStats = calculateDetailedStats(typedHistory, currentWordInput, timeElapsed);

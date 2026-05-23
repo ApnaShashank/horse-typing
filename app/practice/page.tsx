@@ -1,14 +1,224 @@
 'use client';
 
 import { useState, useRef, useEffect, useLayoutEffect, useMemo, memo } from 'react';
-import { useTypingEngine } from './useTypingEngine';
+import { useTypingEngine, IN_MAP } from './useTypingEngine';
 import { GenerationOptions } from './words';
 import {
   Clock, Type, Quote, Mountain, Wrench, X, Play, RotateCcw,
-  Settings2, BarChart3, RefreshCw, TrendingUp
+  Settings2, BarChart3, RefreshCw, TrendingUp, Sun, Moon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+
+// ─── Keyboard Layout Mappings ─────────────────────────────────────
+const ENG_PUNCT_KEY_MAP: Record<string, string> = {
+  '`': 'Backquote', '~': 'Backquote',
+  '!': 'Digit1', '@': 'Digit2', '#': 'Digit3', '$': 'Digit4', '%': 'Digit5',
+  '^': 'Digit6', '&': 'Digit7', '*': 'Digit8', '(': 'Digit9', ')': 'Digit0',
+  '-': 'Minus', '_': 'Minus', '=': 'Equal', '+': 'Equal',
+  '[': 'BracketLeft', '{': 'BracketLeft', ']': 'BracketRight', '}': 'BracketRight',
+  '\\': 'Backslash', '|': 'Backslash',
+  ';': 'Semicolon', ':': 'Semicolon',
+  "'": 'Quote', '"': 'Quote',
+  ',': 'Comma', '<': 'Comma',
+  '.': 'Period', '>': 'Period',
+  '/': 'Slash', '?': 'Slash',
+};
+
+function getHighlightKeyInfo(targetChar: string, isHindi: boolean): { code: string; shift: boolean } | null {
+  if (!targetChar) return null;
+  if (targetChar === ' ') return { code: 'Space', shift: false };
+  
+  let keyToHighlight = targetChar;
+  let isShift = false;
+  
+  if (isHindi) {
+    let foundKey = null;
+    for (const [engKey, hindiChar] of Object.entries(IN_MAP)) {
+      if (hindiChar === targetChar) {
+        foundKey = engKey;
+        break;
+      }
+    }
+    
+    if (foundKey) {
+      isShift = foundKey === foundKey.toUpperCase() && foundKey !== foundKey.toLowerCase();
+      keyToHighlight = foundKey;
+    } else {
+      keyToHighlight = targetChar;
+      isShift = targetChar === targetChar.toUpperCase() && targetChar !== targetChar.toLowerCase();
+    }
+  } else {
+    isShift = targetChar === targetChar.toUpperCase() && targetChar !== targetChar.toLowerCase();
+  }
+  
+  const upperKey = keyToHighlight.toUpperCase();
+  
+  if (/^[A-Z]$/.test(upperKey)) {
+    return { code: `Key${upperKey}`, shift: isShift };
+  }
+  
+  if (/^[0-9]$/.test(upperKey)) {
+    return { code: `Digit${upperKey}`, shift: isShift };
+  }
+  
+  const code = ENG_PUNCT_KEY_MAP[keyToHighlight] || null;
+  if (code) {
+    if (!isHindi) {
+      const shiftedSymbols = '~!@#$%^&*()_+{}|:"<>?';
+      isShift = shiftedSymbols.includes(keyToHighlight);
+    }
+    return { code, shift: isShift };
+  }
+  
+  return null;
+}
+
+type KeyboardKey = {
+  code: string;
+  label: string;
+  shiftLabel?: string;
+  hindiLabel?: string;
+  hindiShiftLabel?: string;
+  isWide?: boolean;
+  isSpace?: boolean;
+  widthClass?: string;
+};
+
+const KEYBOARD_ROWS: KeyboardKey[][] = [
+  [
+    { code: 'Backquote', label: '`', shiftLabel: '~', hindiLabel: 'ॊ', hindiShiftLabel: 'ऒ' },
+    { code: 'Digit1', label: '1', shiftLabel: '!', hindiLabel: '१', hindiShiftLabel: 'ऍ' },
+    { code: 'Digit2', label: '2', shiftLabel: '@', hindiLabel: '२', hindiShiftLabel: 'ॅ' },
+    { code: 'Digit3', label: '3', shiftLabel: '#', hindiLabel: '३', hindiShiftLabel: '्र' },
+    { code: 'Digit4', label: '4', shiftLabel: '$', hindiLabel: '४', hindiShiftLabel: 'र्' },
+    { code: 'Digit5', label: '5', shiftLabel: '%', hindiLabel: '५', hindiShiftLabel: 'ज्ञ' },
+    { code: 'Digit6', label: '6', shiftLabel: '^', hindiLabel: '६', hindiShiftLabel: 'त्र' },
+    { code: 'Digit7', label: '7', shiftLabel: '&', hindiLabel: '७', hindiShiftLabel: 'क्ष' },
+    { code: 'Digit8', label: '8', shiftLabel: '*', hindiLabel: '८', hindiShiftLabel: 'श्र' },
+    { code: 'Digit9', label: '9', shiftLabel: '(', hindiLabel: '९', hindiShiftLabel: '(' },
+    { code: 'Digit0', label: '0', shiftLabel: ')', hindiLabel: '०', hindiShiftLabel: ')' },
+    { code: 'Minus', label: '-', shiftLabel: '_', hindiLabel: '-', hindiShiftLabel: 'ः' },
+    { code: 'Equal', label: '=', shiftLabel: '+', hindiLabel: 'ृ', hindiShiftLabel: 'ऋ' },
+    { code: 'Backspace', label: 'Backspace', isWide: true, widthClass: 'w-[80px] sm:w-[96px] flex-grow' },
+  ],
+  [
+    { code: 'Tab', label: 'Tab', isWide: true, widthClass: 'w-[50px] sm:w-[60px] flex-grow' },
+    { code: 'KeyQ', label: 'Q', hindiLabel: 'ौ', hindiShiftLabel: 'औ' },
+    { code: 'KeyW', label: 'W', hindiLabel: 'ै', hindiShiftLabel: 'ऐ' },
+    { code: 'KeyE', label: 'E', hindiLabel: 'ा', hindiShiftLabel: 'आ' },
+    { code: 'KeyR', label: 'R', hindiLabel: 'ी', hindiShiftLabel: 'ई' },
+    { code: 'KeyT', label: 'T', hindiLabel: 'ू', hindiShiftLabel: 'ऊ' },
+    { code: 'KeyY', label: 'Y', hindiLabel: 'ब', hindiShiftLabel: 'भ' },
+    { code: 'KeyU', label: 'U', hindiLabel: 'ह', hindiShiftLabel: 'ङ' },
+    { code: 'KeyI', label: 'I', hindiLabel: 'ग', hindiShiftLabel: 'घ' },
+    { code: 'KeyO', label: 'O', hindiLabel: 'द', hindiShiftLabel: 'ध' },
+    { code: 'KeyP', label: 'P', hindiLabel: 'ज', hindiShiftLabel: 'झ' },
+    { code: 'BracketLeft', label: '[', shiftLabel: '{', hindiLabel: 'ड', hindiShiftLabel: 'ढ' },
+    { code: 'BracketRight', label: ']', shiftLabel: '}', hindiLabel: '़', hindiShiftLabel: 'ञ' },
+    { code: 'Backslash', label: '\\', shiftLabel: '|', hindiLabel: 'ॉ', hindiShiftLabel: 'ऑ', widthClass: 'w-[45px] sm:w-[54px] flex-grow' },
+  ],
+  [
+    { code: 'CapsLock', label: 'Caps', isWide: true, widthClass: 'w-[65px] sm:w-[78px] flex-grow' },
+    { code: 'KeyA', label: 'A', hindiLabel: 'ो', hindiShiftLabel: 'ओ' },
+    { code: 'KeyS', label: 'S', hindiLabel: 'े', hindiShiftLabel: 'ए' },
+    { code: 'KeyD', label: 'D', hindiLabel: '्', hindiShiftLabel: 'अ' },
+    { code: 'KeyF', label: 'F', hindiLabel: 'ि', hindiShiftLabel: 'इ' },
+    { code: 'KeyG', label: 'G', hindiLabel: 'ु', hindiShiftLabel: 'उ' },
+    { code: 'KeyH', label: 'H', hindiLabel: 'प', hindiShiftLabel: 'फ' },
+    { code: 'KeyJ', label: 'J', hindiLabel: 'र', hindiShiftLabel: 'ऱ' },
+    { code: 'KeyK', label: 'K', hindiLabel: 'क', hindiShiftLabel: 'ख' },
+    { code: 'KeyL', label: 'L', hindiLabel: 'त', hindiShiftLabel: 'थ' },
+    { code: 'Semicolon', label: ';', shiftLabel: ':', hindiLabel: 'च', hindiShiftLabel: 'छ' },
+    { code: 'Quote', label: "'", shiftLabel: '"', hindiLabel: 'ट', hindiShiftLabel: 'ठ' },
+    { code: 'Enter', label: 'Enter', isWide: true, widthClass: 'w-[75px] sm:w-[90px] flex-grow' },
+  ],
+  [
+    { code: 'ShiftLeft', label: 'Shift', isWide: true, widthClass: 'w-[85px] sm:w-[102px] flex-grow' },
+    { code: 'KeyZ', label: 'Z', hindiLabel: 'ॆ', hindiShiftLabel: 'ऎ' },
+    { code: 'KeyX', label: 'X', hindiLabel: 'ं', hindiShiftLabel: 'ँ' },
+    { code: 'KeyC', label: 'C', hindiLabel: 'म', hindiShiftLabel: 'ण' },
+    { code: 'KeyV', label: 'V', hindiLabel: 'न', hindiShiftLabel: 'ऩ' },
+    { code: 'KeyB', label: 'B', hindiLabel: 'व', hindiShiftLabel: 'ऴ' },
+    { code: 'KeyN', label: 'N', hindiLabel: 'ल', hindiShiftLabel: 'ळ' },
+    { code: 'KeyM', label: 'M', hindiLabel: 'स', hindiShiftLabel: 'श' },
+    { code: 'Comma', label: ',', shiftLabel: '<', hindiLabel: ',', hindiShiftLabel: 'ष' },
+    { code: 'Period', label: '.', shiftLabel: '>', hindiLabel: '।', hindiShiftLabel: '.' },
+    { code: 'Slash', label: '/', shiftLabel: '?', hindiLabel: 'य', hindiShiftLabel: 'य़' },
+    { code: 'ShiftRight', label: 'Shift', isWide: true, widthClass: 'w-[85px] sm:w-[102px] flex-grow' },
+  ],
+  [
+    { code: 'Space', label: 'Space', isSpace: true, widthClass: 'w-[300px] sm:w-[400px] flex-grow max-w-[500px]' },
+  ]
+];
+
+function VirtualKeyboard({
+  highlightKey,
+  style,
+  language,
+}: {
+  highlightKey: { code: string; shift: boolean } | null;
+  style: 'standard' | 'neon' | 'retro';
+  language: 'english' | 'hindi';
+}) {
+  return (
+    <div className="w-full flex flex-col gap-1 sm:gap-1.5 p-2 sm:p-4 rounded-[4px] border border-white/5 bg-white/[0.01] backdrop-blur-sm select-none max-w-4xl mx-auto overflow-x-auto no-scrollbar py-3 shrink-0">
+      {KEYBOARD_ROWS.map((row, rowIdx) => (
+        <div key={rowIdx} className="flex justify-center gap-1 sm:gap-1.5 w-full">
+          {row.map(key => {
+            const isHighlighted = highlightKey && (
+              highlightKey.code === key.code || 
+              (highlightKey.shift && (key.code === 'ShiftLeft' || key.code === 'ShiftRight'))
+            );
+            
+            const isHindi = language === 'hindi';
+            let displayLabel = isHindi ? (key.hindiLabel || key.label) : key.label;
+            let displayShiftLabel = isHindi ? key.hindiShiftLabel : key.shiftLabel;
+            
+            const wClass = key.widthClass || 'w-10 sm:w-12 h-10 sm:h-12 flex-shrink-0';
+            
+            let themeClass = '';
+            let activeClass = '';
+            
+            if (style === 'standard') {
+              themeClass = 'bg-[#18181b]/50 border border-white/10 text-on-surface-variant/70 rounded-[2px] shadow-sm';
+              activeClass = isHighlighted 
+                ? 'bg-primary/20 border-primary text-primary shadow-lg shadow-primary/20 scale-[0.98]'
+                : '';
+            } else if (style === 'neon') {
+              themeClass = 'bg-black/40 border border-white/5 text-on-surface-variant/60 rounded-[4px] backdrop-blur-md transition-all duration-300';
+              activeClass = isHighlighted
+                ? 'border-primary text-primary shadow-[0_0_12px_var(--color-primary)] bg-primary/10 scale-[0.97]'
+                : 'hover:border-white/20';
+            } else if (style === 'retro') {
+              themeClass = 'bg-[#dedede] dark:bg-[#2e2e2e] border-t-2 border-l-2 border-r-[3px] border-b-[3px] border-t-white/80 dark:border-t-white/15 border-l-white/80 dark:border-l-white/15 border-r-[#8a8a8a] border-b-[#8a8a8a] text-[#333] dark:text-[#ccc] rounded-[3px] shadow-[3px_3px_0px_rgba(0,0,0,0.8)] font-bold';
+              activeClass = isHighlighted
+                ? 'bg-primary/10 border-t-[#8a8a8a] border-l-[#8a8a8a] border-r-white/80 border-b-white/80 translate-x-[2px] translate-y-[2px] shadow-[1px_1px_0px_rgba(0,0,0,0.8)] text-primary font-black'
+                : '';
+            }
+            
+            return (
+              <div
+                key={key.code}
+                className={`${wClass} relative flex flex-col items-center justify-center text-[11px] sm:text-xs select-none transition-all duration-75 ${themeClass} ${activeClass}`}
+              >
+                {displayShiftLabel && !key.isWide && !key.isSpace && (
+                  <span className="absolute top-1 right-1 sm:right-1.5 text-[8px] sm:text-[9px] opacity-40 font-semibold font-mono">
+                    {displayShiftLabel}
+                  </span>
+                )}
+                
+                <span className={`font-mono ${key.isWide ? 'text-[9px] sm:text-[10px] font-semibold tracking-wider' : 'text-xs sm:text-sm font-bold'}`}>
+                  {displayLabel}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 // ─── Memoized Word Component ─────────────────────────────────────
 const Word = memo(({ target, typed, isCurrent, input }: {
@@ -18,7 +228,7 @@ const Word = memo(({ target, typed, isCurrent, input }: {
   input: string;
 }) => {
   return (
-    <span className={`${isCurrent ? 'active-word' : ''} mx-[0.25em] my-[0.3em] inline-block relative font-mono transition-none select-none`}>
+    <span className={`${isCurrent ? 'active-word' : ''} mx-[0.25em] my-[0.3em] inline-block relative transition-none select-none`}>
       {target.split('').map((char, i) => {
         const typedChar = isCurrent ? input[i] : (typed ? typed[i] : undefined);
         let cls = 'text-on-surface-variant/25';
@@ -75,6 +285,13 @@ export default function Practice() {
   const [customText, setCustomText] = useState('');
   const [customShuffle, setCustomShuffle] = useState(false);
 
+  // Settings preferences state
+  const [showKeyboard, setShowKeyboard] = useState<boolean>(true);
+  const [keyboardStyle, setKeyboardStyle] = useState<'standard' | 'neon' | 'retro'>('standard');
+  const [fontSize, setFontSize] = useState<'small' | 'medium' | 'large'>('medium');
+  const [fontFamily, setFontFamily] = useState<'mono' | 'sans' | 'serif'>('mono');
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.ok ? r.json() : null).then(d => {
       if (d?.authenticated) setUser(d.user);
@@ -115,12 +332,82 @@ export default function Practice() {
     quoteLength: 'all',
   }, handleTestFinish);
 
+  // Sync preferences on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedShow = localStorage.getItem('ht_showKeyboard');
+      if (savedShow !== null) setShowKeyboard(savedShow === 'true');
+      
+      const savedStyle = localStorage.getItem('ht_keyboardStyle');
+      if (savedStyle) setKeyboardStyle(savedStyle as any);
+      
+      const savedSize = localStorage.getItem('ht_fontSize');
+      if (savedSize) setFontSize(savedSize as any);
+      
+      const savedFamily = localStorage.getItem('ht_fontFamily');
+      if (savedFamily) setFontFamily(savedFamily as any);
+
+      const savedLang = localStorage.getItem('ht_language') as 'english' | 'hindi';
+      if (savedLang) {
+        initializeEngine({ ...options, language: savedLang });
+      }
+
+      const isLight = document.documentElement.classList.contains('light') || localStorage.getItem('ht_theme') === 'light';
+      setTheme(isLight ? 'light' : 'dark');
+    }
+  }, []);
+
+  // Sync preference handlers
+  const updateShowKeyboard = (val: boolean) => {
+    setShowKeyboard(val);
+    localStorage.setItem('ht_showKeyboard', String(val));
+  };
+  const updateKeyboardStyle = (val: 'standard' | 'neon' | 'retro') => {
+    setKeyboardStyle(val);
+    localStorage.setItem('ht_keyboardStyle', val);
+  };
+  const updateFontSize = (val: 'small' | 'medium' | 'large') => {
+    setFontSize(val);
+    localStorage.setItem('ht_fontSize', val);
+  };
+  const updateFontFamily = (val: 'mono' | 'sans' | 'serif') => {
+    setFontFamily(val);
+    localStorage.setItem('ht_fontFamily', val);
+  };
+  const updateTheme = (val: 'dark' | 'light') => {
+    setTheme(val);
+    localStorage.setItem('ht_theme', val);
+    if (val === 'light') {
+      document.documentElement.classList.add('light');
+    } else {
+      document.documentElement.classList.remove('light');
+    }
+    window.dispatchEvent(new Event('storage'));
+  };
+  const updateLanguage = (lang: 'english' | 'hindi') => {
+    localStorage.setItem('ht_language', lang);
+    initializeEngine({ ...options, language: lang });
+  };
+
   const wordsContainerRef = useRef<HTMLDivElement>(null);
   const [caretPos, setCaretPos] = useState({ x: 0, y: 0 });
   const [isWordJump, setIsWordJump] = useState(false);
   const [lineOffset, setLineOffset] = useState(0);
   const [isFocused, setIsFocused] = useState(true);
   const prevWordIndex = useRef(0);
+
+  // Dynamic caretaker typography metrics
+  const caretMetrics = useMemo(() => {
+    switch (fontSize) {
+      case 'small':
+        return { height: 26, offset: 4, line: 36, containerHeight: 126, class: 'text-[20px] sm:text-[23px] md:text-[26px]' };
+      case 'large':
+        return { height: 46, offset: 8, line: 60, containerHeight: 210, class: 'text-[32px] sm:text-[38px] md:text-[44px]' };
+      case 'medium':
+      default:
+        return { height: 36, offset: 6, line: 48, containerHeight: 168, class: 'text-[26px] sm:text-[30px] md:text-[34px]' };
+    }
+  }, [fontSize]);
 
   // Caret tracking
   useLayoutEffect(() => {
@@ -133,7 +420,7 @@ export default function Practice() {
     const charSpans = activeSpan.querySelectorAll('.char');
     const currentCharSpan = charSpans[currentWordInput.length] as HTMLElement;
     let x = activeSpan.offsetLeft;
-    const y = activeSpan.offsetTop + 6;
+    const y = activeSpan.offsetTop + caretMetrics.offset;
 
     if (currentWordInput.length > 0) {
       if (currentCharSpan) {
@@ -149,13 +436,26 @@ export default function Practice() {
     prevWordIndex.current = activeWordIndex;
     setCaretPos({ x, y });
 
-    const lineHeight = 48;
+    const lineHeight = caretMetrics.line;
     if (activeSpan.offsetTop > lineHeight * 2.5) {
       setLineOffset(activeSpan.offsetTop - lineHeight * 2);
     } else {
       setLineOffset(0);
     }
-  }, [currentWordInput, activeWordIndex, status, words]);
+  }, [currentWordInput, activeWordIndex, status, words, caretMetrics]);
+
+  // Next Key Highlight calculation
+  const nextKeyInfo = useMemo(() => {
+    if (status === 'finished') return null;
+    const targetWord = words[activeWordIndex];
+    if (!targetWord) return null;
+    
+    const targetChar = currentWordInput.length === targetWord.length
+      ? ' '
+      : targetWord[currentWordInput.length];
+      
+    return getHighlightKeyInfo(targetChar, options.language === 'hindi');
+  }, [words, activeWordIndex, currentWordInput, status, options.language]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -560,7 +860,7 @@ export default function Practice() {
   return (
     <div className="h-[calc(100vh-3.5rem)] mt-14 flex flex-col font-mono text-on-surface overflow-hidden relative selection:bg-primary/10">
 
-      {/* ── Custom Mode Sidebar ─────────────────────────────────── */}
+      {/* ── Settings Sidebar ───────────────────────────────────── */}
       <AnimatePresence>
         {isSidebarOpen && (
           <>
@@ -572,57 +872,218 @@ export default function Practice() {
             <motion.aside
               initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-              className="fixed top-0 right-0 h-full w-full sm:w-80 bg-surface-container-low border-l border-white/5 z-50 flex flex-col shadow-2xl"
+              className="fixed top-0 right-0 h-full w-full sm:w-85 bg-surface-container-low border-l border-white/5 z-50 flex flex-col shadow-2xl overflow-hidden text-on-surface"
             >
               <div className="p-6 border-b border-white/5 flex items-center justify-between flex-shrink-0">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/50">Custom Mode</p>
-                  <h2 className="text-sm font-black uppercase text-on-surface tracking-wide mt-0.5">Text Configuration</h2>
+                  <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/50">Preferences</p>
+                  <h2 className="text-sm font-black uppercase text-on-surface tracking-wide mt-0.5">Settings & Controls</h2>
                 </div>
                 <button
                   onClick={() => setIsSidebarOpen(false)}
-                  className="grid-box p-2 hover:bg-white/5 transition-colors text-on-surface-variant"
+                  className="grid-box p-2 hover:bg-white/5 transition-colors text-on-surface-variant cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-8">
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-[0.4em]">
-                    Input Text
+              <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-6">
+                
+                {/* 1. LANGUAGE */}
+                <div className="space-y-2.5">
+                  <label className="text-[9px] font-black text-on-surface-variant/40 uppercase tracking-[0.4em]">
+                    Language / भाषा
                   </label>
-                  <textarea
-                    className="w-full h-48 bg-black/30 border border-white/5 rounded-[2px] p-4 text-xs text-on-surface focus:border-primary/30 outline-none transition-colors resize-none font-mono leading-relaxed placeholder-on-surface-variant/20"
-                    placeholder="Paste your custom text here…"
-                    value={customText}
-                    onChange={e => setCustomText(e.target.value)}
-                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: 'english', label: 'English' },
+                      { id: 'hindi', label: 'हिन्दी (InScript)' }
+                    ].map(item => (
+                      <button
+                        key={item.id}
+                        onClick={() => updateLanguage(item.id as any)}
+                        className={`py-2.5 rounded-[2px] text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
+                          options.language === item.id
+                            ? 'bg-primary/10 text-primary border-primary/30'
+                            : 'border-white/5 text-on-surface-variant/40 hover:border-white/10 hover:bg-white/3'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-[0.4em]">
-                    Shuffle Words
+                {/* 2. THEME */}
+                <div className="space-y-2.5">
+                  <label className="text-[9px] font-black text-on-surface-variant/40 uppercase tracking-[0.4em]">
+                    Theme
                   </label>
-                  <button
-                    onClick={() => setCustomShuffle(!customShuffle)}
-                    className={`w-full py-3 rounded-[2px] text-[11px] font-black uppercase tracking-widest transition-all border ${customShuffle
-                      ? 'bg-primary/10 text-primary border-primary/30'
-                      : 'border-white/5 text-on-surface-variant/30 hover:border-white/10'}`}
-                  >
-                    {customShuffle ? '✓ Shuffle On' : 'Shuffle Off'}
-                  </button>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: 'dark', label: 'Dark Mode', icon: <Moon className="w-3.5 h-3.5" /> },
+                      { id: 'light', label: 'Light Mode', icon: <Sun className="w-3.5 h-3.5" /> }
+                    ].map(item => (
+                      <button
+                        key={item.id}
+                        onClick={() => updateTheme(item.id as any)}
+                        className={`py-2.5 flex items-center justify-center gap-2 rounded-[2px] text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
+                          theme === item.id
+                            ? 'bg-primary/10 text-primary border-primary/30'
+                            : 'border-white/5 text-on-surface-variant/40 hover:border-white/10 hover:bg-white/3'
+                        }`}
+                      >
+                        {item.icon}
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              <div className="p-6 border-t border-white/5 flex-shrink-0">
-                <button
-                  onClick={startCustomMode}
-                  disabled={!customText.trim()}
-                  className="w-full grid-box py-4 flex items-center justify-center gap-3 text-[11px] font-black uppercase tracking-[0.4em] text-primary border-primary/40 bg-primary/8 hover:bg-primary/15 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  <Play className="w-4 h-4 fill-current" /> Start Custom Test
-                </button>
+                {/* 3. VIRTUAL KEYBOARD DISPLAY */}
+                <div className="space-y-2.5">
+                  <label className="text-[9px] font-black text-on-surface-variant/40 uppercase tracking-[0.4em]">
+                    Virtual Keyboard Guide
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: true, label: 'Show' },
+                      { id: false, label: 'Hide' }
+                    ].map(item => (
+                      <button
+                        key={String(item.id)}
+                        onClick={() => updateShowKeyboard(item.id)}
+                        className={`py-2.5 rounded-[2px] text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
+                          showKeyboard === item.id
+                            ? 'bg-primary/10 text-primary border-primary/30'
+                            : 'border-white/5 text-on-surface-variant/40 hover:border-white/10 hover:bg-white/3'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 4. KEYBOARD STYLE */}
+                {showKeyboard && (
+                  <div className="space-y-2.5">
+                    <label className="text-[9px] font-black text-on-surface-variant/40 uppercase tracking-[0.4em]">
+                      Keyboard Style
+                    </label>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {[
+                        { id: 'standard', label: 'Standard' },
+                        { id: 'neon', label: 'Neon' },
+                        { id: 'retro', label: 'Retro' }
+                      ].map(item => (
+                        <button
+                          key={item.id}
+                          onClick={() => updateKeyboardStyle(item.id as any)}
+                          className={`py-2.5 rounded-[2px] text-[9px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
+                            keyboardStyle === item.id
+                              ? 'bg-primary/10 text-primary border-primary/30'
+                              : 'border-white/5 text-on-surface-variant/40 hover:border-white/10 hover:bg-white/3'
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 5. FONT SIZE */}
+                <div className="space-y-2.5">
+                  <label className="text-[9px] font-black text-on-surface-variant/40 uppercase tracking-[0.4em]">
+                    Font Size
+                  </label>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {[
+                      { id: 'small', label: 'Small' },
+                      { id: 'medium', label: 'Medium' },
+                      { id: 'large', label: 'Large' }
+                    ].map(item => (
+                      <button
+                        key={item.id}
+                        onClick={() => updateFontSize(item.id as any)}
+                        className={`py-2.5 rounded-[2px] text-[9px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
+                          fontSize === item.id
+                            ? 'bg-primary/10 text-primary border-primary/30'
+                            : 'border-white/5 text-on-surface-variant/40 hover:border-white/10 hover:bg-white/3'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 6. FONT FAMILY */}
+                <div className="space-y-2.5">
+                  <label className="text-[9px] font-black text-on-surface-variant/40 uppercase tracking-[0.4em]">
+                    Font Family
+                  </label>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {[
+                      { id: 'mono', label: 'Monospace' },
+                      { id: 'sans', label: 'Sans-Serif' },
+                      { id: 'serif', label: 'Serif' }
+                    ].map(item => (
+                      <button
+                        key={item.id}
+                        onClick={() => updateFontFamily(item.id as any)}
+                        className={`py-2.5 rounded-[2px] text-[9px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
+                          fontFamily === item.id
+                            ? 'bg-primary/10 text-primary border-primary/30'
+                            : 'border-white/5 text-on-surface-variant/40 hover:border-white/10 hover:bg-white/3'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 7. CUSTOM TEXT OPTIONS (Only if mode is custom) */}
+                {options.mode === 'custom' && (
+                  <div className="border-t border-white/5 pt-5 space-y-4">
+                    <div className="space-y-2.5">
+                      <label className="text-[9px] font-black text-on-surface-variant/40 uppercase tracking-[0.4em]">
+                        Custom Input Text
+                      </label>
+                      <textarea
+                        className="w-full h-32 bg-black/30 border border-white/5 rounded-[2px] p-3 text-xs text-on-surface focus:border-primary/30 outline-none transition-colors resize-none font-mono leading-relaxed placeholder-on-surface-variant/20"
+                        placeholder="Paste your custom text here…"
+                        value={customText}
+                        onChange={e => setCustomText(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2.5">
+                      <label className="text-[9px] font-black text-on-surface-variant/40 uppercase tracking-[0.4em]">
+                        Shuffle Words
+                      </label>
+                      <button
+                        onClick={() => setCustomShuffle(!customShuffle)}
+                        className={`w-full py-2.5 rounded-[2px] text-[10px] font-black uppercase tracking-widest transition-all border cursor-pointer ${customShuffle
+                          ? 'bg-primary/10 text-primary border-primary/30'
+                          : 'border-white/5 text-on-surface-variant/30 hover:border-white/10'}`}
+                      >
+                        {customShuffle ? '✓ Shuffle On' : 'Shuffle Off'}
+                      </button>
+                    </div>
+
+                    <button
+                      onClick={startCustomMode}
+                      disabled={!customText.trim()}
+                      className="w-full grid-box py-3.5 flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-[0.4em] text-primary border-primary/40 bg-primary/8 hover:bg-primary/15 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-current" /> Save & Restart
+                    </button>
+                  </div>
+                )}
+
               </div>
             </motion.aside>
           </>
@@ -731,18 +1192,28 @@ export default function Practice() {
             </div>
           </div>
 
-          {/* Timer display (right side) */}
-          {status === 'running' && (
-            <div className="text-right shrink-0">
-              {options.mode === 'time' ? (
-                <span className={`text-base font-black tabular-nums ${timeRemaining <= 5 ? 'text-error animate-pulse' : 'text-primary/60'}`}>
-                  {timeRemaining}s
-                </span>
-              ) : (
-                <span className="text-base font-black tabular-nums text-on-surface-variant/30">{timeElapsed}s</span>
-              )}
-            </div>
-          )}
+          {/* Right section: Timer & Settings */}
+          <div className="flex items-center gap-3 shrink-0">
+            {status === 'running' && (
+              <div>
+                {options.mode === 'time' ? (
+                  <span className={`text-base font-black tabular-nums ${timeRemaining <= 5 ? 'text-error animate-pulse' : 'text-primary/60'}`}>
+                    {timeRemaining}s
+                  </span>
+                ) : (
+                  <span className="text-base font-black tabular-nums text-on-surface-variant/30">{timeElapsed}s</span>
+                )}
+              </div>
+            )}
+            
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 border border-white/5 hover:border-white/10 bg-white/3 hover:bg-white/5 rounded-[2px] text-on-surface-variant/60 hover:text-on-surface transition-all cursor-pointer flex items-center justify-center"
+              title="Open Settings"
+            >
+              <Settings2 className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -816,10 +1287,12 @@ export default function Practice() {
               />
 
               {/* Words container */}
-              <div className="relative w-full overflow-hidden h-[168px]">
+              <div className="relative w-full overflow-hidden" style={{ height: `${caretMetrics.containerHeight}px` }}>
                 <div
                   ref={wordsContainerRef}
-                  className={`absolute top-0 left-0 w-full text-[26px] sm:text-[30px] md:text-[34px] flex flex-wrap content-start select-none transition-all duration-300 ${!isFocused ? 'opacity-[0.06] blur-[3px]' : ''}`}
+                  className={`absolute top-0 left-0 w-full ${caretMetrics.class} ${
+                    fontFamily === 'mono' ? 'font-mono' : fontFamily === 'sans' ? 'font-sans' : 'font-serif'
+                  } flex flex-wrap content-start select-none transition-all duration-300 ${!isFocused ? 'opacity-[0.06] blur-[3px]' : ''}`}
                   style={{ transform: `translateY(-${lineOffset}px)` }}
                 >
                   {/* Caret */}
@@ -827,7 +1300,7 @@ export default function Practice() {
                     <div
                       className={`caret ${status === 'running' ? '' : 'caret-blink'} ${isWordJump ? 'caret-instant' : ''}`}
                       style={{
-                        height: '36px',
+                        height: `${caretMetrics.height}px`,
                         transform: `translate(${caretPos.x}px, ${caretPos.y}px)`,
                         transition: isWordJump ? 'none' : 'transform 0.1s cubic-bezier(0.19, 1, 0.22, 1)',
                       }}
@@ -867,6 +1340,15 @@ export default function Practice() {
                 </div>
               )}
             </div>
+          )}
+
+          {/* ── Virtual Keyboard ── */}
+          {showKeyboard && (status === 'idle' || status === 'running') && (
+            <VirtualKeyboard
+              highlightKey={nextKeyInfo}
+              style={keyboardStyle}
+              language={options.language || 'english'}
+            />
           )}
 
           {/* ── Footer hints ── */}
