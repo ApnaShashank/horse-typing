@@ -245,7 +245,7 @@ function WelcomeScreen({
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           { icon: <Check className="w-4 h-4" />, label: 'Completed', value: `${completed}/56`, color: '#4ade80' },
           { icon: <Zap className="w-4 h-4" />, label: 'Total XP', value: totalXP.toLocaleString(), color: '#fbbf24' },
@@ -301,7 +301,7 @@ function WelcomeScreen({
       {/* Curriculum overview */}
       <div>
         <div className="text-[10px] font-black uppercase tracking-[0.45em] text-on-surface-variant/30 mb-4">Curriculum Map</div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {DIFFICULTY_GROUPS.map(g => {
             const groupLessons = LESSONS.filter(l => l.level >= g.range[0] && l.level <= g.range[1]);
             const done = groupLessons.filter(l => progress[l.id]?.completed).length;
@@ -517,7 +517,7 @@ export default function LearnPage() {
         </div>
 
         {/* Content area */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto no-scrollbar">
           <AnimatePresence mode="wait">
             {selectedLesson ? (
               <motion.div

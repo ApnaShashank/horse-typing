@@ -67,55 +67,55 @@ export default function Leaderboard() {
 
       {/* Leaderboard Table */}
       <div className="w-full bg-surface-container-low border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
-         <div className="grid grid-cols-12 px-8 py-5 border-b border-white/5 bg-surface-container-highest/30 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/40">
-            <div className="col-span-1">#</div>
-            <div className="col-span-1"><Globe className="w-3 h-3" /></div>
-            <div className="col-span-4 pl-4">Typist</div>
+         <div className="grid grid-cols-12 px-4 md:px-8 py-5 border-b border-white/5 bg-surface-container-highest/30 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/40">
+            <div className="col-span-2 sm:col-span-1">#</div>
+            <div className="col-span-1 hidden sm:block"><Globe className="w-3 h-3" /></div>
+            <div className="col-span-6 sm:col-span-4 pl-2 md:pl-4">Typist</div>
             <div className="col-span-2 text-center text-primary">WPM</div>
             <div className="col-span-2 text-center text-on-surface">Accuracy</div>
-            <div className="col-span-2 text-right pr-4">Date</div>
+            <div className="col-span-2 hidden sm:block text-right pr-4">Date</div>
          </div>
 
          <div className="divide-y divide-white/5 min-h-[400px]">
             {loading ? (
-              <div className="flex flex-col items-center justify-center h-[400px] gap-4">
-                 <div className="flex gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-primary animate-bounce"></div>
-                    <div className="w-2 h-2 rounded-full bg-primary animate-bounce delay-150"></div>
-                    <div className="w-2 h-2 rounded-full bg-primary animate-bounce delay-300"></div>
-                 </div>
-                 <span className="text-[10px] uppercase font-bold tracking-widest text-on-surface-variant/20 italic">Gathering Data...</span>
-              </div>
+               <div className="flex flex-col items-center justify-center h-[400px] gap-4">
+                  <div className="flex gap-1.5">
+                     <div className="w-2 h-2 rounded-full bg-primary animate-bounce"></div>
+                     <div className="w-2 h-2 rounded-full bg-primary animate-bounce delay-150"></div>
+                     <div className="w-2 h-2 rounded-full bg-primary animate-bounce delay-300"></div>
+                  </div>
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-on-surface-variant/20 italic">Gathering Data...</span>
+               </div>
             ) : scores.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-[400px] text-on-surface-variant/20 italic">
-                 <Trophy className="w-12 h-12 mb-4 opacity-5" />
-                 <p>No rankings for this mode yet.</p>
-              </div>
+               <div className="flex flex-col items-center justify-center h-[400px] text-on-surface-variant/20 italic">
+                  <Trophy className="w-12 h-12 mb-4 opacity-5" />
+                  <p>No rankings for this mode yet.</p>
+               </div>
             ) : scores.map((s, index) => (
-              <div key={s.id} className="grid grid-cols-12 px-8 py-5 items-center hover:bg-white/[0.02] transition-colors group">
-                 <div className="col-span-1 text-on-surface-variant font-bold text-sm">
-                    {index < 3 ? (
-                       <Medal className={`w-5 h-5 ${index === 0 ? 'text-yellow-400' : index === 1 ? 'text-gray-400' : 'text-amber-600'}`} />
-                    ) : (
-                       index + 1
-                    )}
-                 </div>
-                 <div className="col-span-1 flex items-center justify-center">
-                    <div className="w-2 h-2 rounded-full bg-correct/40"></div>
-                 </div>
-                 <div className="col-span-4 pl-4 font-bold text-sm text-on-surface group-hover:text-primary transition-colors cursor-default">
-                    {s.user?.name || 'Anonymous'}
-                 </div>
-                 <div className="col-span-2 text-center text-primary font-black text-xl">
-                    {s.wpm}
-                 </div>
-                 <div className="col-span-2 text-center text-on-surface font-bold text-sm">
-                    {s.accuracy}%
-                 </div>
-                 <div className="col-span-2 text-right pr-4 text-xs text-on-surface-variant opacity-40">
-                    {new Date(s.createdAt).toLocaleDateString()}
-                 </div>
-              </div>
+               <div key={s.id} className="grid grid-cols-12 px-4 md:px-8 py-5 items-center hover:bg-white/[0.02] transition-colors group">
+                  <div className="col-span-2 sm:col-span-1 text-on-surface-variant font-bold text-sm">
+                     {index < 3 ? (
+                        <Medal className={`w-5 h-5 ${index === 0 ? 'text-yellow-400' : index === 1 ? 'text-gray-400' : 'text-amber-600'}`} />
+                     ) : (
+                        index + 1
+                     )}
+                  </div>
+                  <div className="col-span-1 hidden sm:flex items-center justify-center">
+                     <div className="w-2 h-2 rounded-full bg-correct/40"></div>
+                  </div>
+                  <div className="col-span-6 sm:col-span-4 pl-2 md:pl-4 font-bold text-sm text-on-surface group-hover:text-primary transition-colors cursor-default truncate">
+                     {s.user?.name || 'Anonymous'}
+                  </div>
+                  <div className="col-span-2 text-center text-primary font-black text-base md:text-xl">
+                     {s.wpm}
+                  </div>
+                  <div className="col-span-2 text-center text-on-surface font-bold text-sm">
+                     {s.accuracy}%
+                  </div>
+                  <div className="col-span-2 hidden sm:block text-right pr-4 text-xs text-on-surface-variant opacity-40">
+                     {new Date(s.createdAt).toLocaleDateString()}
+                  </div>
+               </div>
             ))}
          </div>
       </div>

@@ -756,8 +756,8 @@ export default function LearnEngine({ lesson, onComplete }: LearnEngineProps) {
         </div>
 
         {/* Virtual keyboard */}
-        <div className="flex justify-center flex-shrink-0 overflow-x-auto">
-          <div className="min-w-fit">
+        <div className="flex justify-center flex-shrink-0 overflow-x-auto no-scrollbar w-full">
+          <div className="min-w-fit scale-[0.75] sm:scale-90 md:scale-100 origin-center my-[-10px] sm:my-0">
             <VirtualKeyboard targetChar={targetChar} flashState={flashState} />
           </div>
         </div>

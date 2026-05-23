@@ -126,8 +126,8 @@ export default function Profile() {
                   <History className="w-4 h-4" />
                   Recent Activity
                </h3>
-               <div className="bg-surface-container-low border border-white/5 rounded-2xl overflow-hidden shadow-xl">
-                  <table className="w-full text-left border-collapse">
+               <div className="bg-surface-container-low border border-white/5 rounded-2xl overflow-hidden shadow-xl overflow-x-auto no-scrollbar">
+                  <table className="w-full text-left border-collapse min-w-[450px] sm:min-w-0">
                      <thead>
                         <tr className="bg-surface-container-highest/30 text-[9px] uppercase font-black tracking-widest text-on-surface-variant/40">
                            <th className="px-6 py-4">wpm</th>

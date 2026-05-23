@@ -142,61 +142,63 @@ function HeroDemo() {
       </div>
 
       {/* ── Virtual Keyboard ── */}
-      <div className="grid-box bg-black/20 border-white/5 px-3 py-3 flex flex-col items-center gap-1.5">
-        {/* Row 0: ` 1 2 ... 0 - = + ⌫ */}
-        <div className="flex gap-1">
-          {KB_ROWS[0].map(key => (
-            <VirtualKey key={key} label={key} active={activeKey === key} />
-          ))}
-          <VirtualKey label="⌫" active={activeKey === '⌫'} wide />
-        </div>
+      <div className="w-full overflow-x-auto no-scrollbar flex justify-center">
+        <div className="grid-box bg-black/20 border-white/5 px-3 py-3 flex flex-col items-center gap-1.5 scale-[0.75] sm:scale-90 md:scale-100 origin-center my-[-15px] sm:my-0 min-w-fit">
+          {/* Row 0: ` 1 2 ... 0 - = + ⌫ */}
+          <div className="flex gap-1">
+            {KB_ROWS[0].map(key => (
+              <VirtualKey key={key} label={key} active={activeKey === key} />
+            ))}
+            <VirtualKey label="⌫" active={activeKey === '⌫'} wide />
+          </div>
 
-        {/* Row 1: Tab + q...] */}
-        <div className="flex gap-1">
-          <VirtualKey label="tab" active={false} wide />
-          {KB_ROWS[1].map(key => (
-            <VirtualKey key={key} label={key} active={activeKey === key} />
-          ))}
-        </div>
+          {/* Row 1: Tab + q...] */}
+          <div className="flex gap-1">
+            <VirtualKey label="tab" active={false} wide />
+            {KB_ROWS[1].map(key => (
+              <VirtualKey key={key} label={key} active={activeKey === key} />
+            ))}
+          </div>
 
-        {/* Row 2: Caps + a...'; */}
-        <div className="flex gap-1">
-          <VirtualKey label="caps" active={false} wide />
-          {KB_ROWS[2].map(key => (
-            <VirtualKey key={key} label={key} active={activeKey === key} />
-          ))}
-          <VirtualKey label="enter" active={false} wide />
-        </div>
+          {/* Row 2: Caps + a...'; */}
+          <div className="flex gap-1">
+            <VirtualKey label="caps" active={false} wide />
+            {KB_ROWS[2].map(key => (
+              <VirtualKey key={key} label={key} active={activeKey === key} />
+            ))}
+            <VirtualKey label="enter" active={false} wide />
+          </div>
 
-        {/* Row 3: Shift + z.../ + ⌫ */}
-        <div className="flex gap-1">
-          <VirtualKey label="shift" active={false} extraWide />
-          {KB_ROWS[3].map(key => (
-            <VirtualKey key={key} label={key} active={activeKey === key} />
-          ))}
-          <VirtualKey label="shift" active={false} extraWide />
-        </div>
+          {/* Row 3: Shift + z.../ + ⌫ */}
+          <div className="flex gap-1">
+            <VirtualKey label="shift" active={false} extraWide />
+            {KB_ROWS[3].map(key => (
+              <VirtualKey key={key} label={key} active={activeKey === key} />
+            ))}
+            <VirtualKey label="shift" active={false} extraWide />
+          </div>
 
-        {/* Space row */}
-        <div className="flex gap-1 items-center">
-          <VirtualKey label="ctrl" active={false} wide />
-          <VirtualKey label="alt" active={false} wide />
-          <motion.div
-            animate={activeKey === 'space'
-              ? { scale: 0.93, backgroundColor: 'var(--color-primary)' }
-              : { scale: 1, backgroundColor: 'rgba(255,255,255,0.02)' }
-            }
-            transition={{ duration: 0.08 }}
-            className={`h-7 flex-1 rounded-sm border font-bold text-[9px] uppercase tracking-widest flex items-center justify-center select-none
-              ${activeKey === 'space'
-                ? 'border-primary text-background shadow-md shadow-primary/25'
-                : 'border-white/8 text-on-surface-variant/15'
-              }`}
-          >
-            space
-          </motion.div>
-          <VirtualKey label="alt" active={false} wide />
-          <VirtualKey label="ctrl" active={false} wide />
+          {/* Space row */}
+          <div className="flex gap-1 items-center">
+            <VirtualKey label="ctrl" active={false} wide />
+            <VirtualKey label="alt" active={false} wide />
+            <motion.div
+              animate={activeKey === 'space'
+                ? { scale: 0.93, backgroundColor: 'var(--color-primary)' }
+                : { scale: 1, backgroundColor: 'rgba(255,255,255,0.02)' }
+              }
+              transition={{ duration: 0.08 }}
+              className={`h-7 flex-1 rounded-sm border font-bold text-[9px] uppercase tracking-widest flex items-center justify-center select-none
+                ${activeKey === 'space'
+                  ? 'border-primary text-background shadow-md shadow-primary/25'
+                  : 'border-white/8 text-on-surface-variant/15'
+                }`}
+            >
+              space
+            </motion.div>
+            <VirtualKey label="alt" active={false} wide />
+            <VirtualKey label="ctrl" active={false} wide />
+          </div>
         </div>
       </div>
     </div>
