@@ -92,7 +92,7 @@ export default function Practice() {
           wordCount: stats.wordCount,
           wpm: stats.wpm,
           accuracy: stats.accuracy,
-          mistakes: stats.incorrectChars + stats.extraChars,
+          mistakes: stats.incorrectChars + stats.extraChars + stats.missedChars,
           rawSpeed: stats.raw,
           weakKeys: stats.weakKeys,
         }),
@@ -103,7 +103,7 @@ export default function Practice() {
   const {
     status, words, typedHistory, currentWordInput, activeWordIndex,
     timeRemaining, timeElapsed, wpm, raw, accuracy,
-    correctChars, incorrectChars, extraChars, consistency,
+    correctChars, incorrectChars, extraChars, missedChars, consistency,
     options, wpmHistory, quoteSource, handleTyping, initializeEngine,
   } = useTypingEngine({
     mode: 'time',
@@ -252,7 +252,7 @@ export default function Practice() {
               className="grid grid-cols-2 sm:grid-cols-4 gap-3"
             >
               <ResultCard label="Correct" value={correctChars} color="text-correct" />
-              <ResultCard label="Errors" value={incorrectChars + extraChars} color="text-error" />
+              <ResultCard label="Errors" value={incorrectChars + extraChars + missedChars} color="text-error" />
               <ResultCard label="Mode" value={options.mode.toUpperCase()} />
               <ResultCard
                 label="Time"
@@ -557,7 +557,7 @@ export default function Practice() {
                 <div className="w-px h-8 bg-white/5" />
                 <StatPill label="Accuracy" value={wpm > 0 ? `${accuracy}%` : '—'} accent="text-correct" />
                 <div className="w-px h-8 bg-white/5" />
-                <StatPill label="Errors" value={incorrectChars + extraChars} accent="text-error/70" />
+                <StatPill label="Errors" value={incorrectChars + extraChars + missedChars} accent="text-error/70" />
               </motion.div>
             )}
           </AnimatePresence>

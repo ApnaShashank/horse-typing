@@ -67,8 +67,9 @@ export function useTypingEngine(defaultOptions: GenerationOptions, onFinish?: (s
     const timeSec = Math.max(elapsed, 1);
     const wpm = Math.round((correctChars / 5) / (timeSec / 60));
     const raw = Math.round(((correctChars + incorrectChars + extraChars) / 5) / (timeSec / 60));
-    const accuracy = (correctChars + incorrectChars + extraChars) > 0 
-      ? Math.round((correctChars / (correctChars + incorrectChars + extraChars)) * 100) 
+    const totalAttempted = correctChars + incorrectChars + extraChars + missedChars;
+    const accuracy = totalAttempted > 0 
+      ? Math.round((correctChars / totalAttempted) * 100) 
       : 100;
 
     return { wpm, raw, accuracy, correctChars, incorrectChars, extraChars, missedChars };
@@ -79,8 +80,12 @@ export function useTypingEngine(defaultOptions: GenerationOptions, onFinish?: (s
     setStatus('finished');
     if (timerRef.current) cancelAnimationFrame(timerRef.current);
     
+    const exactElapsed = startTimeRef.current !== 0 
+      ? (performance.now() - startTimeRef.current) / 1000 
+      : finalElapsed;
+
     if (onFinish) {
-      const stats = calculateDetailedStats(typedHistory, currentWordInput, finalElapsed);
+      const stats = calculateDetailedStats(typedHistory, currentWordInput, exactElapsed);
       const wpms = wpmHistory.map(h => h.wpm);
       const avgWpm = wpms.length > 0 ? wpms.reduce((a, b) => a + b, 0) / wpms.length : stats.wpm;
       const variance = wpms.length > 0 ? wpms.map(x => Math.pow(x - avgWpm, 2)).reduce((a, b) => a + b, 0) / wpms.length : 0;
@@ -90,7 +95,7 @@ export function useTypingEngine(defaultOptions: GenerationOptions, onFinish?: (s
         ...stats,
         consistency,
         mode: options.mode,
-        duration: finalElapsed,
+        duration: Math.round(exactElapsed),
         wordCount: options.wordCount,
         weakKeys: weakKeysMap,
         wpmHistory
@@ -282,6 +287,11 @@ export function useTypingEngine(defaultOptions: GenerationOptions, onFinish?: (s
     }
 
     if (value.endsWith(' ')) {
+      // Prevent advancing if space is entered but no text has been typed yet
+      if (value.trim() === '') {
+        setCurrentWordInput('');
+        return;
+      }
       setTypedHistory(prev => [...prev, value.trim()]);
       setCurrentWordInput('');
       

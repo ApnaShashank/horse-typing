@@ -316,7 +316,6 @@ export default function LearnEngine({ lesson, onComplete }: LearnEngineProps) {
   const typedRef           = useRef('');
   const flatTextRef        = useRef('');
   const startTimeRef       = useRef<number | null>(null);
-  const correctCountRef    = useRef(0);
   const errorCountRef      = useRef(0);
   const weakKeysRef        = useRef<Record<string, number>>({});
   const flashTimeout       = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -345,9 +344,7 @@ export default function LearnEngine({ lesson, onComplete }: LearnEngineProps) {
     setElapsed(0);
     setFlashState(null);
     setResult(null);
-    typedRef.current        = '';
     startTimeRef.current    = null;
-    correctCountRef.current = 0;
     errorCountRef.current   = 0;
     weakKeysRef.current     = {};
     finishedRef.current     = false;
@@ -373,7 +370,17 @@ export default function LearnEngine({ lesson, onComplete }: LearnEngineProps) {
     const finalElapsed = startTimeRef.current
       ? (performance.now() - startTimeRef.current) / 1000
       : 1;
-    const correct  = correctCountRef.current;
+
+    // Calculate correct characters dynamically to prevent backspace/retype inflation
+    const currentTyped = typedRef.current;
+    const currentFlat = flatTextRef.current;
+    let correct = 0;
+    for (let i = 0; i < currentTyped.length; i++) {
+      if (currentTyped[i] === currentFlat[i]) {
+        correct++;
+      }
+    }
+
     const errors   = errorCountRef.current;
     const total    = correct + errors;
     const wpm      = Math.round((correct / 5) / (finalElapsed / 60));
@@ -418,9 +425,7 @@ export default function LearnEngine({ lesson, onComplete }: LearnEngineProps) {
     if (!startTimeRef.current) startTimeRef.current = performance.now();
 
     const isCorrect = e.key === targetChar;
-    if (isCorrect) {
-      correctCountRef.current++;
-    } else {
+    if (!isCorrect) {
       errorCountRef.current++;
       weakKeysRef.current[targetChar] = (weakKeysRef.current[targetChar] || 0) + 1;
     }
@@ -444,7 +449,9 @@ export default function LearnEngine({ lesson, onComplete }: LearnEngineProps) {
   }, [handleKeyDown]);
 
   // Derived live stats
-  const liveCorrect  = correctCountRef.current;
+  const liveCorrect = typedChars.split('').reduce((acc, char, idx) => {
+    return acc + (char === flatText[idx] ? 1 : 0);
+  }, 0);
   const liveErrors   = errorCountRef.current;
   const liveTotal    = liveCorrect + liveErrors;
   const liveWpm      = (elapsed > 0 && startTimeRef.current)
@@ -465,7 +472,6 @@ export default function LearnEngine({ lesson, onComplete }: LearnEngineProps) {
     setResult(null);
     typedRef.current        = '';
     startTimeRef.current    = null;
-    correctCountRef.current = 0;
     errorCountRef.current   = 0;
     weakKeysRef.current     = {};
     finishedRef.current     = false;
