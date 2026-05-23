@@ -58,8 +58,12 @@ export default function Navbar() {
           {/* Left: Branding */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-4 group transition-all">
-              <div className="grid-box p-1.5 bg-primary/5 group-hover:bg-primary/20 group-active:scale-95 transition-all">
-                <Type className="w-4 h-4 text-primary" />
+              <div className="grid-box p-1 bg-primary/5 group-hover:bg-primary/20 group-active:scale-95 transition-all">
+                <img 
+                  src="https://ik.imagekit.io/DEMOPROJECT/3c470dc2-3a50-4f45-9960-deb3429114e8.png" 
+                  alt="Horse Typing Logo" 
+                  className="w-5 h-5 object-contain"
+                />
               </div>
               <div className="flex items-center">
                 <span className="text-sm font-black text-on-surface uppercase tracking-[0.35em] leading-none">Horse Typing</span>
@@ -96,7 +100,7 @@ export default function Navbar() {
                 >
                   <div className="flex flex-col items-end">
                      <span className="text-xs font-black text-on-surface uppercase tracking-widest">{user.name}</span>
-                     <span className="text-[10px] text-primary/40 font-bold uppercase tracking-widest">Authenticated</span>
+                     <span className="text-[10px] text-primary/40 font-bold uppercase tracking-widest">Online</span>
                   </div>
                   <div className="w-8 h-8 grid-box bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
                     <UserIcon className="w-4 h-4" />
@@ -107,7 +111,7 @@ export default function Navbar() {
                 {isMenuOpen && (
                   <div className="absolute right-0 mt-3 w-64 grid-box bg-surface-container-low border border-white/10 p-2.5 z-70 animate-in fade-in slide-in-from-top-2 duration-300 shadow-2xl">
                     <div className="px-5 py-4 border-b border-white/5 mb-2.5">
-                      <p className="text-[10px] uppercase font-bold text-primary/40 tracking-[0.25em] mb-2">User Identity</p>
+                      <p className="text-[10px] uppercase font-bold text-primary/40 tracking-[0.25em] mb-2">My Profile</p>
                       <p className="text-xs font-black text-on-surface/80 truncate font-mono uppercase tracking-tight">{user.email}</p>
                     </div>
                     
@@ -126,7 +130,7 @@ export default function Navbar() {
                         className="w-full flex items-center gap-4 px-5 py-3 text-xs font-bold uppercase tracking-widest text-error/60 hover:text-error hover:bg-error/5 transition-all"
                       >
                         <LogOut className="w-4.5 h-4.5" />
-                        De-Authorize
+                        Sign Out
                       </button>
                     </div>
                   </div>
@@ -180,7 +184,7 @@ export default function Navbar() {
               {user ? (
                 <>
                   <div className="space-y-1">
-                    <p className="text-[10px] uppercase font-bold text-primary/40 tracking-[0.25em]">Identity</p>
+                    <p className="text-[10px] uppercase font-bold text-primary/40 tracking-[0.25em]">Profile</p>
                     <p className="text-sm font-black text-on-surface/80 uppercase tracking-widest">{user.name}</p>
                     <p className="text-[11px] text-on-surface-variant/40 truncate">{user.email}</p>
                   </div>
@@ -195,7 +199,7 @@ export default function Navbar() {
                     onClick={handleLogout}
                     className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-error/80 text-left"
                   >
-                    <LogOut className="w-4 h-4" /> De-Authorize
+                    <LogOut className="w-4 h-4" /> Sign Out
                   </button>
                 </>
               ) : (

@@ -3,11 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id        String   @id @default(uuid())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String
   email     String   @unique
   password  String
@@ -21,8 +22,8 @@ model User {
 }
 
 model TestResult {
-  id         String   @id @default(uuid())
-  userId     String
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @db.ObjectId
   mode       String   // time, words, quote, zen, custom
   duration   Int      // in seconds
   wordCount  Int
@@ -36,7 +37,8 @@ model TestResult {
 }
 
 model UserStat {
-  userId         String @id
+  id             String @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String @unique @db.ObjectId
   avgWpm         Float  @default(0)
   bestWpm        Int    @default(0)
   avgAccuracy    Float  @default(0)
@@ -47,8 +49,8 @@ model UserStat {
 }
 
 model Mistake {
-  id         String @id @default(uuid())
-  userId     String
+  id         String @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String @db.ObjectId
   keyPressed String
   count      Int    @default(1)
 
@@ -59,8 +61,8 @@ model Mistake {
 }
 
 model CustomText {
-  id        String   @id @default(uuid())
-  userId    String
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @db.ObjectId
   content   String
   createdAt DateTime @default(now())
 
@@ -68,8 +70,8 @@ model CustomText {
 }
 
 model Leaderboard {
-  id        String   @id @default(uuid())
-  userId    String
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @db.ObjectId
   wpm       Int
   accuracy  Int
   mode      String
@@ -82,7 +84,7 @@ model Leaderboard {
 }
 
 model WordPool {
-  id        String   @id @default(uuid())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String   @unique
   words     String[]
   category  String?

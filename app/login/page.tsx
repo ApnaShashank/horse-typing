@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Lock, Mail, Type } from 'lucide-react';
+import { ArrowRight, Lock, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
@@ -37,64 +37,69 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center p-6 tracking-wide font-mono bg-background mt-16 overflow-hidden">
-      <div className="w-full max-w-md relative">
-        {/* Decorative Grid Background for Form */}
-        <div className="absolute -inset-4 opacity-20 pointer-events-none">
-          <div className="w-full h-full grid-lines-hero border border-white/5" />
-        </div>
+    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center p-6 tracking-wide font-mono bg-background mt-16 overflow-hidden relative">
+      {/* Decorative background grid and blurs */}
+      <div className="absolute inset-0 -z-10 pointer-events-none" style={{
+        backgroundImage: 'linear-gradient(to right,#ffffff02 1px,transparent 1px),linear-gradient(to bottom,#ffffff02 1px,transparent 1px)',
+        backgroundSize: '40px 40px'
+      }} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-primary/5 rounded-full blur-[100px] -z-10" />
 
-        <div className="grid-box border-white/10 bg-zinc-950/80 p-10 md:p-14 relative overflow-hidden group">
-          {/* Top Status Bar */}
-          <div className="absolute top-0 left-0 w-full h-1 bg-primary/20">
+      <div className="w-full max-w-md relative">
+        <div className="grid-box border-white/10 bg-zinc-950/80 p-8 md:p-12 relative overflow-hidden group shadow-2xl">
+          {/* Top Status/Glow Bar */}
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-primary/20">
             <motion.div 
               initial={{ width: 0 }}
               animate={{ width: "100%" }}
-              transition={{ duration: 1.5, ease: "easeInOut" }}
+              transition={{ duration: 1.2, ease: "easeInOut" }}
               className="h-full bg-primary" 
             />
           </div>
 
-          <div className="flex flex-col items-center mb-12">
-            <div className="grid-box w-12 h-12 bg-primary/5 flex items-center justify-center text-primary mb-6 group-hover:bg-primary/20 transition-all">
-              <Type className="w-6 h-6" />
+          {/* Logo & Header */}
+          <div className="flex flex-col items-center mb-8">
+            <div className="grid-box p-2 bg-primary/5 mb-5 group-hover:bg-primary/10 transition-all border-primary/20 flex items-center justify-center w-14 h-14">
+              <img 
+                src="https://ik.imagekit.io/DEMOPROJECT/3c470dc2-3a50-4f45-9960-deb3429114e8.png" 
+                alt="Horse Typing Logo" 
+                className="w-10 h-10 object-contain"
+              />
             </div>
-            <h1 className="text-3xl font-black uppercase tracking-tighter text-on-surface mb-3">Authenticate</h1>
-            <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.4em] text-primary/40 animate-pulse">
-              <span className="w-1 h-1 rounded-full bg-primary" />
-              Identity Submission Required
-            </div>
+            <h1 className="text-2xl font-black uppercase tracking-widest text-on-surface mb-2">Sign In</h1>
+            <p className="text-center text-[11px] font-medium text-on-surface-variant/50 max-w-xs leading-relaxed">
+              Access your personal typing dashboard, track WPM history, and compete on the global leaderboard.
+            </p>
           </div>
 
           {error && (
             <motion.div 
-              initial={{ opacity: 0, y: -10 }}
+              initial={{ opacity: 0, y: -5 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-8 p-4 bg-error-dim/10 border border-error-dim/30 text-error text-[10px] font-black uppercase tracking-[0.2em] text-center"
+              className="mb-6 p-4 bg-error-dim/10 border border-error-dim/20 text-error text-[10px] font-bold uppercase tracking-widest text-center rounded"
             >
-              System Error: {error}
+              Error: {error}
             </motion.div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-3">
-              <label className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-[0.4em]">Access Key (Email)</label>
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest">Email Address</label>
               <div className="relative group/input">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/20 group-focus-within/input:text-primary transition-colors" />
                 <input
                   type="email"
                   required
-                  suppressHydrationWarning
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-black/40 border border-white/5 outline-none rounded-[2px] py-4 pl-12 pr-4 text-xs text-on-surface focus:border-primary/40 focus:bg-black/60 transition-all font-mono"
-                  placeholder="ID@HORSETYPING.COM"
+                  className="w-full bg-black/40 border border-white/5 outline-none rounded py-3.5 pl-12 pr-4 text-xs text-on-surface focus:border-primary/40 focus:bg-black/60 transition-all font-mono placeholder:text-on-surface-variant/25"
+                  placeholder="name@example.com"
                 />
               </div>
             </div>
 
-            <div className="space-y-3">
-              <label className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-[0.4em]">Security Token (Password)</label>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest">Password</label>
               <div className="relative group/input">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/20 group-focus-within/input:text-primary transition-colors" />
                 <input
@@ -102,7 +107,7 @@ export default function Login() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-black/40 border border-white/5 outline-none rounded-[2px] py-4 pl-12 pr-4 text-xs text-on-surface focus:border-primary/40 focus:bg-black/60 transition-all font-mono"
+                  className="w-full bg-black/40 border border-white/5 outline-none rounded py-3.5 pl-12 pr-4 text-xs text-on-surface focus:border-primary/40 focus:bg-black/60 transition-all font-mono placeholder:text-on-surface-variant/25"
                   placeholder="••••••••"
                 />
               </div>
@@ -111,29 +116,28 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full grid-box bg-primary/10 border-primary/40 text-primary font-black py-5 text-[11px] uppercase tracking-[0.4em] hover:bg-primary/20 active:scale-[0.98] transition-all flex justify-center items-center gap-3 disabled:opacity-50 mt-4 overflow-hidden relative"
+              className="w-full grid-box bg-primary/10 border-primary/40 text-primary font-black py-4 text-[11px] uppercase tracking-widest hover:bg-primary/20 active:scale-[0.98] transition-all flex justify-center items-center gap-3 disabled:opacity-50 mt-2 cursor-pointer shadow-lg shadow-black/20"
             >
               {loading ? (
-                <span className="animate-pulse">Authenticating...</span>
+                <span className="animate-pulse">Signing In...</span>
               ) : (
                 <>
-                  Boot Session <ArrowRight className="w-4 h-4" />
+                  Sign In <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
           </form>
 
-          <div className="mt-12 pt-8 border-t border-white/5 flex flex-col items-center gap-6">
-            <p className="text-[10px] font-black text-on-surface-variant/30 uppercase tracking-[0.3em]">
-              Unregistered Identity? <Link href="/register" className="text-primary hover:text-primary-dim transition-colors">Initialize here</Link>
+          <div className="mt-8 pt-6 border-t border-white/5 flex flex-col items-center gap-4">
+            <p className="text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-wider">
+              Don't have an account? <Link href="/register" className="text-primary hover:text-primary-dim transition-colors ml-1">Create account</Link>
             </p>
-            <Link href="/practice" className="text-[9px] font-bold text-on-surface-variant/20 hover:text-on-surface-variant/40 uppercase tracking-[0.4em] transition-colors">
-              Abort to Practice Module
+            <Link href="/practice" className="text-[9px] font-bold text-on-surface-variant/20 hover:text-on-surface-variant/40 uppercase tracking-widest transition-colors">
+              Back to Practice Module
             </Link>
           </div>
         </div>
       </div>
-
     </div>
   );
 }

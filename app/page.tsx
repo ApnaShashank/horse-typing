@@ -414,15 +414,15 @@ export default function Home() {
                     <div className="absolute inset-0 grid-lines-hero" />
                  </div>
                  <div className="z-10 text-center space-y-6">
-                    <motion.div 
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                      className="inline-block"
-                    >
-                      <Terminal className="w-16 h-16 text-primary/40 opacity-50 group-hover:opacity-100 transition-opacity" />
-                    </motion.div>
-                    <div className="text-[9px] font-bold text-primary/40 uppercase tracking-[0.8em] animate-pulse">Awaiting Authentication</div>
-                    <Link href="/register" className="grid-box px-8 py-4 text-[9px] font-black tracking-[0.3em] uppercase border-primary/40 text-primary hover:bg-primary/20 transition-all block">Boot System Module</Link>
+                    <div className="inline-block p-4 bg-primary/5 rounded-full border border-primary/10 group-hover:border-primary/30 transition-colors">
+                      <img 
+                        src="https://ik.imagekit.io/DEMOPROJECT/3c470dc2-3a50-4f45-9960-deb3429114e8.png" 
+                        alt="Horse Typing Logo" 
+                        className="w-16 h-16 object-contain"
+                      />
+                    </div>
+                    <div className="text-[10px] font-bold text-primary uppercase tracking-[0.4em]">Ready to start training?</div>
+                    <Link href="/register" className="grid-box px-8 py-4 text-[9px] font-black tracking-[0.3em] uppercase border-primary/40 text-primary hover:bg-primary/20 transition-all block">Create Free Account</Link>
                  </div>
               </div>
            </motion.div>
@@ -433,9 +433,9 @@ export default function Home() {
       <section className="py-40 bg-zinc-950/20 border-t border-white/5 relative overflow-hidden">
         <div className="max-w-[1250px] mx-auto px-6 md:px-12 grid grid-cols-1 md:grid-cols-3 gap-24 relative z-10">
            {[ 
-             {l: "Prisma Authenticated Users", v: "420K+", s: <Activity className="w-4 h-4" />}, 
-             {l: "Mean Network Latency", v: "12ms", s: <Zap className="w-4 h-4" />}, 
-             {l: "Supabase Test Cycles", v: "12.5M", s: <DatabaseBackup className="w-4 h-4" />} 
+             {l: "Registered Typists", v: "42K+", s: <Activity className="w-4 h-4" />}, 
+             {l: "Input Latency", v: "< 1ms", s: <Zap className="w-4 h-4" />}, 
+             {l: "Tests Completed", v: "1.2M+", s: <DatabaseBackup className="w-4 h-4" />} 
            ].map((m, i) => (
              <motion.div 
                 key={m.l} 
@@ -469,12 +469,12 @@ export default function Home() {
                <div className="space-y-4">
                   <div className="flex items-center gap-3 text-primary">
                     <Trophy className="w-5 h-5" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.5em]">Global Ranking Spectrum</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.5em]">Global Rankings</span>
                   </div>
                   <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-none text-on-surface">Verified Sessions.</h2>
                </div>
                <p className="text-[11px] font-bold text-on-surface-variant/30 uppercase tracking-[0.3em] max-w-sm leading-loose">
-                  Real-time telemetry from the last 24 hours. Every session is verified with sub-pixel precision and archived in the Prisma Cloud.
+                  Real-time leaderboard from the last 24 hours. Every session is verified and saved to ensure clean competition.
                </p>
             </div>
 
@@ -489,7 +489,7 @@ export default function Home() {
                {/* Table Header */}
                <div className="grid grid-cols-[80px_1fr_100px_100px_120px] gap-4 px-8 py-5 border-b border-white/5 text-[9px] font-black text-on-surface-variant/20 uppercase tracking-[0.4em] bg-white/1">
                   <span>Rank</span>
-                  <span>Identity</span>
+                  <span>Typist</span>
                   <span className="text-right">WPM</span>
                   <span className="text-right">ACC</span>
                   <span className="text-right">Word Pool</span>
@@ -521,12 +521,12 @@ export default function Home() {
                {/* Table Footer / CTA */}
                <div className="p-12 text-center bg-white/1 relative">
                   <div className="space-y-8 max-w-lg mx-auto">
-                     <p className="text-[10px] font-bold text-on-surface-variant/20 uppercase tracking-[0.4em]">Initialize your own verified session</p>
+                     <p className="text-[10px] font-bold text-on-surface-variant/20 uppercase tracking-[0.4em]">Start tracking your typing performance today</p>
                      <div className="flex flex-col items-center gap-6">
                         <Link href="/register" className="grid-box bg-primary/10 border-primary/40 text-primary font-black px-12 py-5 text-[11px] uppercase tracking-[0.4em] hover:bg-primary/20 hover:scale-[1.02] active:scale-95 transition-all shadow-xl">
-                           Claim Your Identity
+                           Create Free Account
                         </Link>
-                        <Link href="/login" className="text-[9px] font-black text-on-surface-variant/30 hover:text-on-surface transition-colors uppercase tracking-[0.4em]">Existing operative? Sign in here</Link>
+                        <Link href="/login" className="text-[9px] font-black text-on-surface-variant/30 hover:text-on-surface transition-colors uppercase tracking-[0.4em]">Already have an account? Sign in here</Link>
                      </div>
                   </div>
                </div>
