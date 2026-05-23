@@ -177,7 +177,7 @@ export default function Home() {
             backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(150,150,150,0.08) 0%, transparent 60%)'
           }} />
           <div className="absolute inset-0" style={{
-            backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.025) 1px, transparent 1px)',
+            backgroundImage: 'linear-gradient(to right, var(--border-color, rgba(255,255,255,0.025)) 1px, transparent 1px), linear-gradient(to bottom, var(--border-color, rgba(255,255,255,0.025)) 1px, transparent 1px)',
             backgroundSize: '60px 60px'
           }} />
         </div>

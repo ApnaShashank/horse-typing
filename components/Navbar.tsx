@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { User as UserIcon, LogOut, Trophy, Activity, Menu, X, ChevronDown } from 'lucide-react';
+import { User as UserIcon, LogOut, Trophy, Activity, Menu, X, ChevronDown, Sun, Moon } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,8 +12,26 @@ export default function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const router = useRouter();
   const pathname = usePathname();
+
+  // Initialize theme from localStorage/document class
+  useEffect(() => {
+    const isLight = document.documentElement.classList.contains('light');
+    setTheme(isLight ? 'light' : 'dark');
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    localStorage.setItem('ht_theme', nextTheme);
+    if (nextTheme === 'light') {
+      document.documentElement.classList.add('light');
+    } else {
+      document.documentElement.classList.remove('light');
+    }
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -98,6 +116,15 @@ export default function Navbar() {
 
           {/* Right section */}
           <div className="hidden md:flex items-center gap-3">
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg border border-white/8 hover:border-white/15 bg-white/3 hover:bg-white/6 transition-all text-on-surface-variant/70 hover:text-on-surface cursor-pointer flex items-center justify-center shrink-0"
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+
             {loading ? (
               <div className="w-20 h-8 rounded-lg bg-white/4 animate-pulse" />
             ) : user ? (
@@ -198,7 +225,25 @@ export default function Navbar() {
                   {link.label}
                 </Link>
               ))}
-              <div className="mt-3 pt-3 border-t border-white/5">
+              <div className="mt-3 pt-3 border-t border-white/5 flex flex-col gap-1.5">
+                {/* Mobile Theme Toggle */}
+                <button
+                  onClick={toggleTheme}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-on-surface-variant/60 hover:bg-white/4 hover:text-on-surface transition-colors text-left cursor-pointer w-full"
+                >
+                  {theme === 'dark' ? (
+                    <>
+                      <Sun className="w-4 h-4" />
+                      <span>Light Mode</span>
+                    </>
+                  ) : (
+                    <>
+                      <Moon className="w-4 h-4" />
+                      <span>Dark Mode</span>
+                    </>
+                  )}
+                </button>
+
                 {user ? (
                   <div className="space-y-2">
                     <p className="px-4 text-xs font-bold text-on-surface-variant/30 uppercase tracking-widest">{user.name}</p>

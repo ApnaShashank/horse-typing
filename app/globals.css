@@ -22,16 +22,52 @@
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
 }
 
+:root {
+  --grid-line-color: #1a1a1a;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --bg-grid-hero: rgba(255, 255, 255, 0.02);
+}
+
+.light {
+  --color-background: #fbfbfb;
+  --color-main: #666666;
+  --color-sub: #cccccc;
+  --color-text: #1e1e1e;
+  --color-error: #dc2626;
+  --color-correct: #16a34a;
+  
+  --color-on-surface: #1e1e1e;
+  --color-on-surface-variant: #7a7a7a;
+  --color-primary: #1e1e1e;
+  --color-primary-dim: #4b5563;
+  --color-error-dim: #fee2e2;
+
+  --color-surface-container-low: #f9fafb;
+  --color-surface-container: #f3f4f6;
+  --color-surface-container-high: #e5e7eb;
+  --color-surface-container-highest: #d1d5db;
+
+  /* Switch Tailwind core white & black colors for utility compatibility */
+  --color-white: #000000;
+  --color-black: #ffffff;
+  --color-zinc-950: #fbfbfb;
+
+  --grid-line-color: #f1f1f1;
+  --border-color: rgba(0, 0, 0, 0.08);
+  --bg-grid-hero: rgba(0, 0, 0, 0.015);
+}
+
 @layer base {
   body {
-    background-color: #111111;
+    background-color: var(--color-background);
     background-image: 
-      linear-gradient(to right, #1a1a1a 1px, transparent 1px),
-      linear-gradient(to bottom, #1a1a1a 1px, transparent 1px);
+      linear-gradient(to right, var(--grid-line-color) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line-color) 1px, transparent 1px);
     background-size: 40px 40px;
-    color: #e0e0e0;
+    color: var(--color-on-surface);
     font-feature-settings: "ss01", "ss02", "cv01", "cv02";
     -webkit-font-smoothing: antialiased;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 }
 
@@ -67,14 +103,16 @@
 
 /* Sharp Corners and Border Utility */
 .grid-box {
-  @apply border border-white/10 rounded-[2px] bg-background/50 backdrop-blur-sm;
+  border: 1px solid var(--border-color);
+  border-radius: 2px;
+  background-color: var(--color-background);
+  backdrop-filter: blur(8px);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .grid-lines-hero {
    background-image: 
-    linear-gradient(to right, #ffffff05 1px, transparent 1px),
-    linear-gradient(to bottom, #ffffff05 1px, transparent 1px);
+    linear-gradient(to right, var(--bg-grid-hero) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--bg-grid-hero) 1px, transparent 1px);
    background-size: 20px 20px;
 }
-
-
