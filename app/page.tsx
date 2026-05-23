@@ -178,7 +178,7 @@ export default function Home() {
           }} />
           <div className="absolute inset-0" style={{
             backgroundImage: 'linear-gradient(to right, var(--border-color, rgba(255,255,255,0.025)) 1px, transparent 1px), linear-gradient(to bottom, var(--border-color, rgba(255,255,255,0.025)) 1px, transparent 1px)',
-            backgroundSize: '60px 60px'
+            backgroundSize: '40px 40px'
           }} />
         </div>
 
