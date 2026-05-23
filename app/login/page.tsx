@@ -59,11 +59,11 @@ export default function Login() {
 
           {/* Logo & Header */}
           <div className="flex flex-col items-center mb-8">
-            <div className="grid-box p-2 bg-primary/5 mb-5 group-hover:bg-primary/10 transition-all border-primary/20 flex items-center justify-center w-14 h-14">
+            <div className="grid-box p-0 overflow-hidden bg-primary/5 mb-5 group-hover:bg-primary/10 transition-all border-primary/20 flex items-center justify-center w-14 h-14">
               <img 
                 src="https://ik.imagekit.io/DEMOPROJECT/3c470dc2-3a50-4f45-9960-deb3429114e8.png" 
                 alt="Horse Typing Logo" 
-                className="w-10 h-10 object-contain"
+                className="w-full h-full object-cover"
               />
             </div>
             <h1 className="text-2xl font-black uppercase tracking-widest text-on-surface mb-2">Sign In</h1>

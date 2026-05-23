@@ -58,11 +58,11 @@ export default function Navbar() {
           {/* Left: Branding */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-4 group transition-all">
-              <div className="grid-box p-1 bg-primary/5 group-hover:bg-primary/20 group-active:scale-95 transition-all">
+              <div className="grid-box p-0 overflow-hidden w-8 h-8 flex items-center justify-center bg-primary/5 group-hover:bg-primary/20 group-active:scale-95 transition-all">
                 <img 
                   src="https://ik.imagekit.io/DEMOPROJECT/3c470dc2-3a50-4f45-9960-deb3429114e8.png" 
                   alt="Horse Typing Logo" 
-                  className="w-5 h-5 object-contain"
+                  className="w-full h-full object-cover"
                 />
               </div>
               <div className="flex items-center">

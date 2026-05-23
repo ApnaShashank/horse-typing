@@ -37,7 +37,7 @@ export default function Leaderboard() {
   ];
 
   return (
-    <main className="min-h-screen bg-background font-mono text-on-surface p-6 lg:p-12 pt-28 max-w-6xl mx-auto selection:bg-primary/20 relative">
+    <main className="min-h-screen bg-background font-mono text-on-surface p-6 lg:p-12 pt-36 max-w-6xl mx-auto selection:bg-primary/20 relative">
       {/* Background blurs */}
       <div className="absolute top-10 left-10 w-96 h-96 bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10" />
       <div className="absolute bottom-10 right-10 w-96 h-96 bg-primary/3 rounded-full blur-[100px] pointer-events-none -z-10" />

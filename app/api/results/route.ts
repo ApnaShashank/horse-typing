@@ -51,17 +51,39 @@ export async function POST(request: Request) {
         });
       }
 
-      // 3. Update the global leaderboard if 30s/60s time mode or standard words to keep it competitive
+      // 3. Update the global leaderboard if 15s/30s/60s time mode or standard words to keep it competitive
       if ((mode === 'time' && (duration === 15 || duration === 30 || duration === 60)) || 
           (mode === 'words' && (wordCount === 25 || wordCount === 50))) {
-         await tx.leaderboard.create({
-            data: {
-              userId: session.userId,
-              mode: `${mode} ${mode === 'time' ? duration : wordCount}`,
-              wpm,
-              accuracy
+         const leaderboardMode = `${mode} ${mode === 'time' ? duration : wordCount}`;
+         
+         const existingLeaderboard = await tx.leaderboard.findFirst({
+            where: {
+               userId: session.userId,
+               mode: leaderboardMode
             }
          });
+
+         if (existingLeaderboard) {
+            if (wpm > existingLeaderboard.wpm) {
+               await tx.leaderboard.update({
+                  where: { id: existingLeaderboard.id },
+                  data: {
+                     wpm,
+                     accuracy,
+                     createdAt: new Date()
+                  }
+               });
+            }
+         } else {
+            await tx.leaderboard.create({
+               data: {
+                  userId: session.userId,
+                  mode: leaderboardMode,
+                  wpm,
+                  accuracy
+               }
+            });
+         }
       }
 
       // 4. Log specific mistakes to the DB for user's personal training weak points

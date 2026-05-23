@@ -414,11 +414,11 @@ export default function Home() {
                     <div className="absolute inset-0 grid-lines-hero" />
                  </div>
                  <div className="z-10 text-center space-y-6">
-                    <div className="inline-block p-4 bg-primary/5 rounded-full border border-primary/10 group-hover:border-primary/30 transition-colors">
+                    <div className="inline-block w-24 h-24 p-0 overflow-hidden bg-primary/5 rounded-full border border-primary/10 group-hover:border-primary/30 transition-colors relative">
                       <img 
                         src="https://ik.imagekit.io/DEMOPROJECT/3c470dc2-3a50-4f45-9960-deb3429114e8.png" 
                         alt="Horse Typing Logo" 
-                        className="w-16 h-16 object-contain"
+                        className="w-full h-full object-cover"
                       />
                     </div>
                     <div className="text-[10px] font-bold text-primary uppercase tracking-[0.4em]">Ready to start training?</div>

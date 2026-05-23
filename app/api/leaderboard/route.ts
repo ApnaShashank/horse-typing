@@ -69,9 +69,16 @@ export async function GET(request: Request) {
       user: { name: score.user.name }
     }));
 
-    // Merge database scores and simulated scores, removing duplicates if user has matching names, 
-    // and sort them to create a single ranking spectrum
-    const merged = [...formattedDbScores];
+    // Deduplicate DB scores by username, keeping only the highest WPM score for each user.
+    const uniqueDbScores = new Map<string, typeof formattedDbScores[0]>();
+    for (const score of formattedDbScores) {
+      const username = score.user.name.toLowerCase();
+      if (!uniqueDbScores.has(username) || uniqueDbScores.get(username)!.wpm < score.wpm) {
+        uniqueDbScores.set(username, score);
+      }
+    }
+
+    const merged = Array.from(uniqueDbScores.values());
     
     // Add simulated scores that don't match names of actual players in DB (to avoid duplicates)
     for (const sim of defaultSimulated) {

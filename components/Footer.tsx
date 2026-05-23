@@ -38,11 +38,11 @@ export default function Footer() {
           {/* Brand Identity Column */}
           <div className="space-y-8">
             <Link href="/" className="flex items-center gap-4 group">
-              <div className="grid-box p-1 bg-primary/5 group-hover:bg-primary/10 transition-all border-primary/20">
+              <div className="grid-box p-0 overflow-hidden w-8 h-8 flex items-center justify-center bg-primary/5 group-hover:bg-primary/10 transition-all border-primary/20">
                 <img 
                   src="https://ik.imagekit.io/DEMOPROJECT/3c470dc2-3a50-4f45-9960-deb3429114e8.png" 
                   alt="Horse Typing Logo" 
-                  className="w-5 h-5 object-contain"
+                  className="w-full h-full object-cover"
                 />
               </div>
               <span className="text-sm font-black text-on-surface uppercase tracking-[0.4em]">Horse Typing</span>
