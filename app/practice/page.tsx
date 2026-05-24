@@ -191,7 +191,7 @@ function KeyCell({
 }: {
   kb: KeyboardKey;
   isHighlighted: boolean;
-  style: 'standard' | 'neon' | 'retro';
+  style: 'standard' | 'neon' | 'retro' | 'glass' | 'cyberpunk';
   language: 'english' | 'hindi';
 }) {
   const isHindi = language === 'hindi';
@@ -204,38 +204,56 @@ function KeyCell({
   // Base colors per key type and style
   let baseStyle = '';
   let pressedStyle = '';
-  let shadow3d = ''
+  let shadow3d = '';
   let pressedShadow = '';
 
   if (style === 'standard') {
-    // Dark theme
+    // Dark theme / Light theme premium look
     const charBase  = 'dark:bg-[#2a2a35] bg-[#e0e0e8] dark:text-[#c8c8e0] text-[#1a1a2e] dark:border-[#3a3a50]/80 border-[#b0b0c0]';
     const modBase   = 'dark:bg-[#1e1e28] bg-[#cbcbd8] dark:text-[#8888aa] text-[#4a4a6a] dark:border-[#303045]/80 border-[#a0a0b5]';
     const spaceBase = 'dark:bg-[#252535] bg-[#d8d8e8] dark:text-[#6666aa] text-[#3a3a6a] dark:border-[#353550]/80 border-[#ababc0]';
 
     baseStyle    = `border rounded-[5px] ${isChar ? charBase : isMod ? modBase : spaceBase}`;
-    shadow3d     = 'shadow-[0_5px_0_0] dark:shadow-[#0d0d18] shadow-[#9898a8]';
+    shadow3d     = 'shadow-[0_4px_0_0] dark:shadow-[#0d0d18] shadow-[#9898a8]';
     pressedStyle = `${isChar ? charBase : isMod ? modBase : spaceBase} border rounded-[5px]`;
-    pressedShadow= 'shadow-[0_2px_0_0] dark:shadow-[#0d0d18] shadow-[#9898a8] translate-y-[3px]';
+    pressedShadow= 'shadow-[0_1px_0_0] dark:shadow-[#0d0d18] shadow-[#9898a8] translate-y-[3px]';
   } else if (style === 'neon') {
     const charBase  = 'bg-[#0d0d1a] text-[#a0a0ff] border-[#3030a0]/60';
     const modBase   = 'bg-[#080812] text-[#606090] border-[#202060]/50';
     const spaceBase = 'bg-[#0a0a16] text-[#5050a0] border-[#252575]/50';
 
     baseStyle    = `border rounded-[4px] ${isChar ? charBase : isMod ? modBase : spaceBase}`;
-    shadow3d     = 'shadow-[0_5px_0_0] shadow-[#05050f]';
+    shadow3d     = 'shadow-[0_4px_0_0] shadow-[#05050f]';
     pressedStyle = `${isChar ? charBase : isMod ? modBase : spaceBase} border rounded-[4px]`;
-    pressedShadow= 'shadow-[0_2px_0_0] shadow-[#05050f] translate-y-[3px]';
-  } else {
-    // retro
+    pressedShadow= 'shadow-[0_1px_0_0] shadow-[#05050f] translate-y-[3px]';
+  } else if (style === 'retro') {
     const charBase  = 'dark:bg-[#3a3a2e] bg-[#d8d4b0] dark:text-[#d8d890] text-[#2a2810] dark:border-[#555540] border-[#a8a48a]';
     const modBase   = 'dark:bg-[#2e2e28] bg-[#c8c4a0] dark:text-[#909070] text-[#4a4828] dark:border-[#444438] border-[#989478]';
     const spaceBase = 'dark:bg-[#383830] bg-[#d0cc9a] dark:text-[#707058] text-[#383618] dark:border-[#4a4a3c] border-[#a0988a]';
 
     baseStyle    = `border-2 rounded-[3px] font-bold ${isChar ? charBase : isMod ? modBase : spaceBase}`;
-    shadow3d     = 'shadow-[3px_5px_0_0] dark:shadow-[#12120c] shadow-[#808060]';
+    shadow3d     = 'shadow-[2px_4px_0_0] dark:shadow-[#12120c] shadow-[#808060]';
     pressedStyle = `${isChar ? charBase : isMod ? modBase : spaceBase} border-2 rounded-[3px] font-bold`;
-    pressedShadow= 'shadow-[1px_2px_0_0] dark:shadow-[#12120c] shadow-[#808060] translate-x-[2px] translate-y-[3px]';
+    pressedShadow= 'shadow-[0px_1px_0_0] dark:shadow-[#12120c] shadow-[#808060] translate-x-[2px] translate-y-[3px]';
+  } else if (style === 'glass') {
+    const charBase  = 'dark:bg-white/[0.04] bg-black/[0.03] dark:text-white/80 text-black/80 dark:border-white/10 border-black/10 backdrop-blur-[6px]';
+    const modBase   = 'dark:bg-white/[0.015] bg-black/[0.01] dark:text-white/50 text-black/50 dark:border-white/5 border-black/5 backdrop-blur-[6px]';
+    const spaceBase = 'dark:bg-white/[0.03] bg-black/[0.02] dark:text-white/40 text-black/40 dark:border-white/10 border-black/10 backdrop-blur-[6px]';
+
+    baseStyle    = `border rounded-[6px] ${isChar ? charBase : isMod ? modBase : spaceBase}`;
+    shadow3d     = 'shadow-[0_3px_6px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.05)]';
+    pressedStyle = `${isChar ? charBase : isMod ? modBase : spaceBase} border rounded-[6px]`;
+    pressedShadow= 'shadow-[0_1px_2px_rgba(0,0,0,0.05)] translate-y-[2px]';
+  } else {
+    // cyberpunk
+    const charBase  = 'bg-[#150d22] text-[#00f3ff] border-[#ff007f]/40 font-mono';
+    const modBase   = 'bg-[#0b0615] text-[#ff007f] border-[#00f3ff]/20 font-mono';
+    const spaceBase = 'bg-[#100a1c] text-[#00f3ff]/70 border-[#ff007f]/30';
+
+    baseStyle    = `border rounded-[2px] uppercase ${isChar ? charBase : isMod ? modBase : spaceBase}`;
+    shadow3d     = 'shadow-[0_4px_0_0_#ff007f]';
+    pressedStyle = `${isChar ? charBase : isMod ? modBase : spaceBase} border rounded-[2px]`;
+    pressedShadow= 'shadow-[0_1px_0_0_#ff007f] translate-y-[3px]';
   }
 
   const highlightOver = isHighlighted
@@ -243,7 +261,11 @@ function KeyCell({
       ? 'border-[#7070ff] bg-[#1a1a40] text-[#b0b0ff] shadow-[0_0_10px_2px_rgba(100,100,255,0.4)]'
       : style === 'retro'
         ? 'dark:bg-[#5a5820] bg-[#ffffaa] dark:text-[#ffee40] text-[#3a3800] dark:border-[#888840] border-[#c8c040]'
-        : 'dark:bg-[#3a3060] bg-[#d8d0ff] dark:text-[#c8b4ff] text-[#2a0080] dark:border-[#6040c0] border-[#8060e0]'
+        : style === 'glass'
+          ? 'dark:bg-white/15 bg-black/10 border-white/40 text-primary dark:shadow-[0_0_12px_rgba(255,255,255,0.15)] shadow-[0_0_12px_rgba(0,0,0,0.08)] font-black'
+          : style === 'cyberpunk'
+            ? 'bg-[#ffff00] border-[#ffff00] text-black shadow-[0_0_12px_#ffff00] font-black'
+            : 'dark:bg-[#3a3060] bg-[#d8d0ff] dark:text-[#c8b4ff] text-[#2a0080] dark:border-[#6040c0] border-[#8060e0]'
     : '';
 
   const finalShadow = isHighlighted ? pressedShadow : shadow3d;
@@ -251,28 +273,27 @@ function KeyCell({
 
   return (
     <div
-      style={{ flexGrow: kb.flex ?? 1, flexShrink: 0, flexBasis: `${(kb.flex ?? 1) * 40}px`, minWidth: `${(kb.flex ?? 1) * 28}px` }}
+      style={{ flexGrow: kb.flex ?? 1, flexShrink: 0, flexBasis: `${(kb.flex ?? 1) * 32}px`, minWidth: `${(kb.flex ?? 1) * 22}px` }}
       className={`
-        relative h-10 sm:h-[44px] flex flex-col items-center justify-center
+        relative h-[28px] sm:h-[36px] flex flex-col items-center justify-center
         transition-all duration-[60ms] ease-out select-none
         ${finalState} ${finalShadow} ${isHighlighted ? highlightOver : ''}
       `}
     >
       {/* Shift / secondary label — top-right corner */}
       {secondary && (
-        <span className="absolute top-[3px] right-[5px] text-[8px] sm:text-[9px] opacity-50 font-semibold leading-none">
+        <span className="absolute top-[2px] right-[4px] text-[7px] sm:text-[8px] opacity-40 font-semibold leading-none">
           {secondary}
         </span>
       )}
 
       {/* Primary label */}
       {isSpace ? (
-        // Space bar: show small indicator
-        <span className="text-[10px] opacity-30 tracking-[0.3em] uppercase font-bold">space</span>
+        <span className="text-[8px] opacity-35 tracking-[0.25em] uppercase font-bold">space</span>
       ) : isChar ? (
-        <span className="text-[12px] sm:text-[14px] font-bold leading-none">{primary}</span>
+        <span className="text-[10px] sm:text-xs font-bold leading-none">{primary}</span>
       ) : (
-        <span className="text-[8px] sm:text-[9px] font-semibold tracking-wide leading-none text-center px-1">{primary}</span>
+        <span className="text-[7.5px] sm:text-[8.5px] font-semibold tracking-wide leading-none text-center px-0.5">{primary}</span>
       )}
     </div>
   );
@@ -284,22 +305,22 @@ function VirtualKeyboard({
   language,
 }: {
   highlightKey: { code: string; shift: boolean } | null;
-  style: 'standard' | 'neon' | 'retro';
+  style: 'standard' | 'neon' | 'retro' | 'glass' | 'cyberpunk';
   language: 'english' | 'hindi';
 }) {
   return (
     <div
       className={`
-        w-full flex flex-col gap-[5px] sm:gap-[6px] select-none max-w-5xl mx-auto overflow-x-auto no-scrollbar shrink-0
-        p-3 sm:p-5 rounded-xl
+        w-full flex flex-col gap-[4px] sm:gap-[5px] select-none max-w-3xl mx-auto overflow-x-auto no-scrollbar shrink-0
+        p-2 sm:p-3 rounded-xl
         dark:bg-[#13131f] bg-[#e8e8f0]
         dark:border dark:border-white/[0.06] border border-black/[0.08]
-        dark:shadow-[0_20px_60px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.04)]
-        shadow-[0_8px_32px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.8)]
+        dark:shadow-[0_15px_40px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.03)]
+        shadow-[0_6px_24px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.6)]
       `}
     >
       {KB.map((row, rowIdx) => (
-        <div key={rowIdx} className="flex justify-center gap-[4px] sm:gap-[5px] w-full">
+        <div key={rowIdx} className="flex justify-center gap-[3px] sm:gap-[4px] w-full">
           {row.map(key => {
             const isHighlighted = !!highlightKey && (
               highlightKey.code === key.code ||
@@ -388,7 +409,7 @@ export default function Practice() {
 
   // Settings preferences state
   const [showKeyboard, setShowKeyboard] = useState<boolean>(true);
-  const [keyboardStyle, setKeyboardStyle] = useState<'standard' | 'neon' | 'retro'>('standard');
+  const [keyboardStyle, setKeyboardStyle] = useState<'standard' | 'neon' | 'retro' | 'glass' | 'cyberpunk'>('standard');
   const [fontSize, setFontSize] = useState<'small' | 'medium' | 'large'>('medium');
   const [fontFamily, setFontFamily] = useState<'mono' | 'sans' | 'serif'>('mono');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
@@ -463,7 +484,7 @@ export default function Practice() {
     setShowKeyboard(val);
     localStorage.setItem('ht_showKeyboard', String(val));
   };
-  const updateKeyboardStyle = (val: 'standard' | 'neon' | 'retro') => {
+  const updateKeyboardStyle = (val: 'standard' | 'neon' | 'retro' | 'glass' | 'cyberpunk') => {
     setKeyboardStyle(val);
     localStorage.setItem('ht_keyboardStyle', val);
   };
@@ -1072,11 +1093,13 @@ export default function Practice() {
                     <label className="text-[9px] font-black text-on-surface-variant/40 uppercase tracking-[0.4em]">
                       Keyboard Style
                     </label>
-                    <div className="grid grid-cols-3 gap-1.5">
+                    <div className="grid grid-cols-2 gap-1.5">
                       {[
                         { id: 'standard', label: 'Standard' },
                         { id: 'neon', label: 'Neon' },
-                        { id: 'retro', label: 'Retro' }
+                        { id: 'retro', label: 'Retro' },
+                        { id: 'glass', label: 'Glass' },
+                        { id: 'cyberpunk', label: 'Cyberpunk' }
                       ].map(item => (
                         <button
                           key={item.id}
@@ -1094,7 +1117,6 @@ export default function Practice() {
                   </div>
                 )}
 
-                {/* 5. FONT SIZE */}
                 <div className="space-y-2.5">
                   <label className="text-[9px] font-black text-on-surface-variant/40 uppercase tracking-[0.4em]">
                     Font Size
@@ -1445,11 +1467,13 @@ export default function Practice() {
 
           {/* ── Virtual Keyboard ── */}
           {showKeyboard && (status === 'idle' || status === 'running') && (
-            <VirtualKeyboard
-              highlightKey={nextKeyInfo}
-              style={keyboardStyle}
-              language={options.language || 'english'}
-            />
+            <div className="mt-8 sm:mt-12 md:mt-16 w-full">
+              <VirtualKeyboard
+                highlightKey={nextKeyInfo}
+                style={keyboardStyle}
+                language={options.language || 'english'}
+              />
+            </div>
           )}
 
           {/* ── Footer hints ── */}
