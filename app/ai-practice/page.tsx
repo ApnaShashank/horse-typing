@@ -324,6 +324,10 @@ export default function AIPractice() {
       return;
     }
 
+    if (e.key === 'Enter') {
+      e.preventDefault();
+    }
+
     // Ignore modifier keys
     if (e.key.length !== 1 && e.key !== 'Enter') return;
 
