@@ -500,8 +500,13 @@ export default function Practice() {
         initializeEngine({ ...options, language: savedLang });
       }
 
-      const isLight = document.documentElement.classList.contains('light') || localStorage.getItem('ht_theme') === 'light';
-      setTheme(isLight ? 'light' : 'dark');
+      const syncTheme = () => {
+        const isLight = document.documentElement.classList.contains('light') || localStorage.getItem('ht_theme') === 'light';
+        setTheme(isLight ? 'light' : 'dark');
+      };
+      syncTheme();
+      window.addEventListener('storage', syncTheme);
+      return () => window.removeEventListener('storage', syncTheme);
     }
   }, []);
 
@@ -548,12 +553,12 @@ export default function Practice() {
   const caretMetrics = useMemo(() => {
     switch (fontSize) {
       case 'small':
-        return { height: 26, offset: 4, line: 36, containerHeight: 126, class: 'text-[20px] sm:text-[23px] md:text-[26px]' };
+        return { height: 26, offset: 4, line: 42, containerHeight: 130, class: 'text-[20px] sm:text-[23px] md:text-[26px]' };
       case 'large':
-        return { height: 46, offset: 8, line: 60, containerHeight: 210, class: 'text-[32px] sm:text-[38px] md:text-[44px]' };
+        return { height: 46, offset: 8, line: 72, containerHeight: 220, class: 'text-[32px] sm:text-[38px] md:text-[44px]' };
       case 'medium':
       default:
-        return { height: 36, offset: 6, line: 48, containerHeight: 168, class: 'text-[26px] sm:text-[30px] md:text-[34px]' };
+        return { height: 36, offset: 6, line: 55, containerHeight: 170, class: 'text-[26px] sm:text-[30px] md:text-[34px]' };
     }
   }, [fontSize]);
 
@@ -585,8 +590,8 @@ export default function Practice() {
     setCaretPos({ x, y });
 
     const lineHeight = caretMetrics.line;
-    if (activeSpan.offsetTop > lineHeight * 2.5) {
-      setLineOffset(activeSpan.offsetTop - lineHeight * 2);
+    if (activeSpan.offsetTop > lineHeight * 1.5) {
+      setLineOffset(activeSpan.offsetTop - lineHeight);
     } else {
       setLineOffset(0);
     }

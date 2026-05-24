@@ -16,10 +16,15 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Initialize theme from localStorage/document class
+  // Initialize theme from localStorage/document class and keep synced
   useEffect(() => {
-    const isLight = document.documentElement.classList.contains('light');
-    setTheme(isLight ? 'light' : 'dark');
+    const syncTheme = () => {
+      const isLight = document.documentElement.classList.contains('light');
+      setTheme(isLight ? 'light' : 'dark');
+    };
+    syncTheme();
+    window.addEventListener('storage', syncTheme);
+    return () => window.removeEventListener('storage', syncTheme);
   }, []);
 
   const toggleTheme = () => {
@@ -31,6 +36,7 @@ export default function Navbar() {
     } else {
       document.documentElement.classList.remove('light');
     }
+    window.dispatchEvent(new Event('storage'));
   };
 
   useEffect(() => {
