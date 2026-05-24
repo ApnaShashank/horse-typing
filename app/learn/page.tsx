@@ -50,14 +50,15 @@ function updateStreak(): StreakData {
   return updated;
 }
 
-function isLessonUnlocked(lessonId: number, progress: ProgressData): boolean {
+function isLessonUnlocked(lessonId: number, progress: ProgressData, isLoggedIn: boolean): boolean {
+  if (isLoggedIn) return true;
   if (lessonId === 1) return true;
   return Boolean(progress[lessonId - 1]?.completed);
 }
 
-function getNextUnlockedLesson(progress: ProgressData): Lesson {
+function getNextUnlockedLesson(progress: ProgressData, isLoggedIn: boolean): Lesson {
   for (const lesson of LESSONS) {
-    if (!progress[lesson.id]?.completed && isLessonUnlocked(lesson.id, progress)) {
+    if (!progress[lesson.id]?.completed && isLessonUnlocked(lesson.id, progress, isLoggedIn)) {
       return lesson;
     }
   }
@@ -132,7 +133,9 @@ function LessonItem({
         {locked
           ? <Lock className="w-3.5 h-3.5 text-on-surface-variant/25" />
           : isCompleted
-          ? <Check className="w-3.5 h-3.5" style={{ color: diffColor }} />
+          ? <span className="flex items-center gap-1 text-[8px] font-black text-correct uppercase tracking-wider bg-correct/10 px-1 py-0.5 rounded border border-correct/20 shrink-0">Mastered</span>
+          : progress && progress.attempts > 0
+          ? <span className="flex items-center gap-1 text-[8px] font-black text-primary uppercase tracking-wider bg-primary/10 px-1 py-0.5 rounded border border-primary/20 shrink-0">Practiced</span>
           : isSelected
           ? <ChevronRight className="w-3.5 h-3.5 text-primary/60" />
           : <div className="w-1.5 h-1.5 rounded-full bg-white/15" />
@@ -144,7 +147,7 @@ function LessonItem({
 
 // ─── Difficulty Group ─────────────────────────────────────────────
 function DifficultyGroup({
-  label, difficulty, range, progress, selectedId, onSelect, defaultOpen,
+  label, difficulty, range, progress, selectedId, onSelect, defaultOpen, isLoggedIn,
 }: {
   label: string;
   difficulty: Difficulty;
@@ -153,6 +156,7 @@ function DifficultyGroup({
   selectedId: number | null;
   onSelect: (id: number) => void;
   defaultOpen: boolean;
+  isLoggedIn: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const color = getDifficultyColor(difficulty);
@@ -191,7 +195,7 @@ function DifficultyGroup({
                 key={lesson.id}
                 lesson={lesson}
                 isSelected={selectedId === lesson.id}
-                isUnlocked={isLessonUnlocked(lesson.id, progress)}
+                isUnlocked={isLessonUnlocked(lesson.id, progress, isLoggedIn)}
                 isCompleted={Boolean(progress[lesson.id]?.completed)}
                 progress={progress[lesson.id]}
                 onClick={() => onSelect(lesson.id)}
@@ -206,15 +210,16 @@ function DifficultyGroup({
 
 // ─── Welcome Screen ───────────────────────────────────────────────
 function WelcomeScreen({
-  progress, totalXP, streak, onStart,
+  progress, totalXP, streak, onStart, isLoggedIn,
 }: {
   progress: ProgressData;
   totalXP: number;
   streak: StreakData;
   onStart: (id: number) => void;
+  isLoggedIn: boolean;
 }) {
   const completed = countCompleted(progress);
-  const nextLesson = getNextUnlockedLesson(progress);
+  const nextLesson = getNextUnlockedLesson(progress, isLoggedIn);
   const allDone = completed === LESSONS.length;
 
   return (
@@ -340,8 +345,9 @@ export default function LearnPage() {
   const [selectedId, setSelectedId]     = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen]   = useState(false);
   const [engineKey, setEngineKey]       = useState(0); // force re-mount on retry
+  const [user, setUser]                 = useState<any>(null);
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount & check query params and login status
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setProgress(loadProgress());
@@ -349,6 +355,28 @@ export default function LearnPage() {
     setTotalXP(loadXP());
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setStreak(loadStreak());
+
+    // Check if user is logged in
+    fetch('/api/auth/me')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d?.authenticated) {
+          setUser(d.user);
+        }
+      })
+      .catch(() => {});
+
+    // Check query params for redirected lesson suggestions
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const lessonParam = params.get('lesson');
+      if (lessonParam) {
+        const lid = parseInt(lessonParam, 10);
+        if (lid >= 1 && lid <= 56) {
+          setSelectedId(lid);
+        }
+      }
+    }
   }, []);
 
   const selectedLesson = selectedId ? LESSONS.find(l => l.id === selectedId) ?? null : null;
@@ -460,6 +488,7 @@ export default function LearnPage() {
             selectedId={selectedId}
             onSelect={handleSelectLesson}
             defaultOpen={g.difficulty === defaultOpenGroup}
+            isLoggedIn={!!user}
           />
         ))}
       </div>
@@ -549,6 +578,7 @@ export default function LearnPage() {
                   totalXP={totalXP}
                   streak={streak}
                   onStart={handleSelectLesson}
+                  isLoggedIn={!!user}
                 />
               </motion.div>
             )}
