@@ -553,12 +553,12 @@ export default function Practice() {
   const caretMetrics = useMemo(() => {
     switch (fontSize) {
       case 'small':
-        return { height: 26, offset: 4, line: 42, containerHeight: 130, class: 'text-[20px] sm:text-[23px] md:text-[26px]' };
+        return { height: 26, offset: 4, line: 47, containerHeight: 155, class: 'text-[20px] sm:text-[23px] md:text-[26px]' };
       case 'large':
-        return { height: 46, offset: 8, line: 72, containerHeight: 220, class: 'text-[32px] sm:text-[38px] md:text-[44px]' };
+        return { height: 46, offset: 8, line: 80, containerHeight: 260, class: 'text-[32px] sm:text-[38px] md:text-[44px]' };
       case 'medium':
       default:
-        return { height: 36, offset: 6, line: 55, containerHeight: 170, class: 'text-[26px] sm:text-[30px] md:text-[34px]' };
+        return { height: 36, offset: 6, line: 62, containerHeight: 200, class: 'text-[26px] sm:text-[30px] md:text-[34px]' };
     }
   }, [fontSize]);
 
@@ -1491,7 +1491,7 @@ export default function Practice() {
               <div className="relative w-full overflow-hidden" style={{ height: `${caretMetrics.containerHeight}px` }}>
                 <div
                   ref={wordsContainerRef}
-                  className={`absolute top-0 left-0 w-full ${caretMetrics.class} ${
+                  className={`absolute top-0 left-0 w-full leading-[1.2] ${caretMetrics.class} ${
                     fontFamily === 'mono' ? 'font-mono' : fontFamily === 'sans' ? 'font-sans' : 'font-serif'
                   } flex flex-wrap content-start select-none transition-all duration-300 ${!isFocused ? 'opacity-[0.06] blur-[3px]' : ''}`}
                   style={{ transform: `translateY(-${lineOffset}px)` }}
