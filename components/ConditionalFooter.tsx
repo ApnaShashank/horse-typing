@@ -8,8 +8,9 @@ export default function ConditionalFooter() {
   const isPracticePage = pathname === '/practice';
   const isAuthPage = pathname === '/login' || pathname === '/register';
   const isLearnPage = pathname === '/learn' || pathname.startsWith('/learn/');
+  const isAIPracticePage = pathname === '/ai-practice';
 
-  if (isPracticePage || isAuthPage || isLearnPage) return null;
+  if (isPracticePage || isAuthPage || isLearnPage || isAIPracticePage) return null;
 
   return <Footer />;
 }

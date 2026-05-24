@@ -409,21 +409,23 @@ export default function AIPractice() {
     <div className="flex h-[calc(100vh-3.5rem)] mt-14 overflow-hidden font-mono text-on-surface bg-background">
       
       {/* ── Left Section: Practice / Type Space ── */}
-      <main className="flex-1 flex flex-col overflow-y-auto no-scrollbar p-6 lg:p-10 relative">
-        <div className="max-w-4xl mx-auto w-full space-y-6 flex-1 flex flex-col justify-center">
+      <main className="flex-1 flex flex-col overflow-y-auto no-scrollbar p-4 md:p-6 lg:p-8 relative">
+        <div className="max-w-4xl mx-auto w-full space-y-4 flex-1 flex flex-col justify-center items-stretch">
           
-          {/* Header */}
-          <div className="flex items-center gap-3">
-            <div className="grid-box p-2.5 bg-primary/5 text-primary">
-              <Sparkles className="w-5 h-5" />
+          {/* Header (Only shown when not practicing) */}
+          {!activeGeneration && (
+            <div className="flex items-center gap-3">
+              <div className="grid-box p-2.5 bg-primary/5 text-primary">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-on-surface">AI Typing Practice</h1>
+                <p className="text-[10px] sm:text-xs font-bold text-on-surface-variant/40 uppercase tracking-widest">
+                  Generate custom paragraphs, edit details, and practice keys
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-on-surface">AI Typing Practice</h1>
-              <p className="text-[10px] sm:text-xs font-bold text-on-surface-variant/40 uppercase tracking-widest">
-                Generate custom paragraphs, edit details, and practice keys
-              </p>
-            </div>
-          </div>
+          )}
 
           <AnimatePresence mode="wait">
             {!activeGeneration ? (
@@ -433,7 +435,7 @@ export default function AIPractice() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -16 }}
-                className="grid-box p-6 bg-surface-container-low border border-white/5 space-y-5 rounded-2xl relative overflow-hidden"
+                className="grid-box p-5 bg-surface-container-low border border-white/5 space-y-4 rounded-2xl relative overflow-hidden"
               >
                 <div className="absolute top-0 right-0 p-8 opacity-[0.01] pointer-events-none">
                   <Brain className="w-48 h-48" />
@@ -456,7 +458,7 @@ export default function AIPractice() {
                       onChange={(e) => setPrompt(e.target.value)}
                       placeholder="e.g. Write a resignation letter to company, or write a bubble sort code in JavaScript..."
                       rows={3}
-                      className="w-full bg-black/35 border border-white/8 rounded-xl p-4 text-xs font-sans text-on-surface placeholder:text-on-surface-variant/20 focus:outline-none focus:border-primary/45 transition-colors"
+                      className="w-full bg-black/35 border border-white/8 rounded-xl p-3.5 text-xs font-sans text-on-surface placeholder:text-on-surface-variant/20 focus:outline-none focus:border-primary/45 transition-colors"
                     />
                   </div>
 
@@ -478,7 +480,7 @@ export default function AIPractice() {
                     <button
                       type="submit"
                       disabled={loading || !prompt.trim()}
-                      className={`px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
+                      className={`px-5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
                         loading || !prompt.trim()
                           ? 'bg-primary/10 text-primary cursor-not-allowed border border-primary/20'
                           : 'bg-primary text-background hover:bg-primary/95 hover:scale-[1.02]'
@@ -506,13 +508,13 @@ export default function AIPractice() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="grid-box p-6 bg-surface-container-low border border-white/5 rounded-2xl space-y-6"
+                className="grid-box p-5 bg-surface-container-low border border-white/5 rounded-2xl space-y-5"
               >
-                <div className="text-center space-y-2">
-                  <div className="flex justify-center mb-2">
-                    <CheckCircle2 className="w-16 h-16 text-correct drop-shadow-[0_0_12px_rgba(74,222,128,0.4)]" />
+                <div className="text-center space-y-1">
+                  <div className="flex justify-center mb-1">
+                    <CheckCircle2 className="w-12 h-12 text-correct drop-shadow-[0_0_12px_rgba(74,222,128,0.4)]" />
                   </div>
-                  <h2 className="text-2xl font-black uppercase tracking-tighter text-correct">Practice Complete!</h2>
+                  <h2 className="text-xl font-black uppercase tracking-tighter text-correct">Practice Complete!</h2>
                   <p className="text-[10px] text-on-surface-variant/40 uppercase tracking-widest">
                     AI generated paragraph successfully completed
                   </p>
@@ -525,27 +527,27 @@ export default function AIPractice() {
                     { label: 'Errors', value: testResult.errors, cls: 'text-error' },
                     { label: 'Time Spent', value: `${Math.round(testResult.time)}s`, cls: 'text-on-surface-variant/60' },
                   ].map(s => (
-                    <div key={s.label} className="grid-box p-4 text-center bg-white/[0.015]">
+                    <div key={s.label} className="grid-box p-3 text-center bg-white/[0.015]">
                       <div className="text-[9px] font-black uppercase tracking-widest text-on-surface-variant/30 mb-1">{s.label}</div>
-                      <div className={`text-2xl font-black ${s.cls}`}>{s.value}</div>
+                      <div className={`text-xl font-black ${s.cls}`}>{s.value}</div>
                     </div>
                   ))}
                 </div>
 
-                <div className="flex gap-3 mt-4">
+                <div className="flex gap-3 mt-2">
                   <motion.button
                     whileHover={{ scale: 1.015 }} whileTap={{ scale: 0.985 }}
                     onClick={resetEngine}
-                    className="grid-box flex-1 py-3.5 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-on-surface-variant/50 hover:bg-white/5 transition-all cursor-pointer"
+                    className="grid-box flex-1 py-3 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-on-surface-variant/50 hover:bg-white/5 transition-all cursor-pointer"
                   >
                     <RotateCcw className="w-4 h-4" /> Try Again
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.015 }} whileTap={{ scale: 0.985 }}
                     onClick={() => setActiveGeneration(null)}
-                    className="grid-box flex-1 py-3.5 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/10 border-primary/30 transition-all cursor-pointer"
+                    className="grid-box flex-1 py-3 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/10 border-primary/30 transition-all cursor-pointer"
                   >
-                    <Sparkles className="w-4 h-4" /> Create Another
+                    <Sparkles className="w-4 h-4" /> Create New
                   </motion.button>
                 </div>
               </motion.div>
@@ -556,11 +558,11 @@ export default function AIPractice() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="space-y-5"
+                className="space-y-4"
               >
                 {/* Control bar */}
-                <div className="flex flex-wrap items-center justify-between gap-4 grid-box p-3 bg-white/[0.01]">
-                  <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex flex-wrap items-center justify-between gap-3 grid-box p-2.5 bg-white/[0.01]">
+                  <div className="flex items-center gap-2 min-w-0">
                     <button
                       onClick={() => setActiveGeneration(null)}
                       className="p-1.5 hover:bg-white/5 rounded-md border border-white/5 hover:border-white/10 transition-all cursor-pointer flex-shrink-0"
@@ -570,7 +572,7 @@ export default function AIPractice() {
                     </button>
                     <div className="min-w-0">
                       <span className="text-[9px] font-black uppercase tracking-widest text-primary/70 line-clamp-1">Prompt: {activeGeneration.prompt}</span>
-                      <div className="flex items-center gap-2 mt-0.5">
+                      <div className="flex items-center gap-1.5 mt-0.5">
                         <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm" style={{ backgroundColor: `${diffInfo.color}15`, color: diffInfo.color }}>
                           {diffInfo.label}
                         </span>
@@ -581,8 +583,16 @@ export default function AIPractice() {
                     </div>
                   </div>
 
-                  {/* Right options: edit & generate another */}
-                  <div className="flex items-center gap-2 shrink-0">
+                  {/* Options: Create New, Edit, Create Another */}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      onClick={() => setActiveGeneration(null)}
+                      className="px-2.5 py-1.5 rounded border border-white/8 hover:border-white/15 bg-white/3 hover:bg-white/6 transition-all text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer text-primary hover:border-primary/20"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Create New
+                    </button>
+                    
                     <button
                       onClick={() => {
                         if (isEditing) {
@@ -592,24 +602,24 @@ export default function AIPractice() {
                           setIsEditing(true);
                         }
                       }}
-                      className="px-3 py-1.5 rounded border border-white/8 hover:border-white/15 bg-white/3 hover:bg-white/6 transition-all text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer text-on-surface-variant hover:text-on-surface"
+                      className="px-2.5 py-1.5 rounded border border-white/8 hover:border-white/15 bg-white/3 hover:bg-white/6 transition-all text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer text-on-surface-variant hover:text-on-surface"
                     >
                       {isEditing ? (
                         <>
                           <Save className="w-3.5 h-3.5 text-correct" />
-                          Save Text
+                          Save
                         </>
                       ) : (
                         <>
                           <Edit2 className="w-3.5 h-3.5" />
-                          Edit Text
+                          Edit
                         </>
                       )}
                     </button>
 
                     <button
                       onClick={() => handleGenerate()}
-                      className="px-3 py-1.5 rounded border border-primary/20 hover:border-primary/40 bg-primary/5 hover:bg-primary/10 text-primary transition-all text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer"
+                      className="px-2.5 py-1.5 rounded border border-primary/20 hover:border-primary/45 bg-primary/5 hover:bg-primary/10 text-primary transition-all text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer font-bold"
                     >
                       <RefreshCw className="w-3.5 h-3.5" />
                       Create Another
@@ -618,13 +628,13 @@ export default function AIPractice() {
                 </div>
 
                 {/* Main typing container */}
-                <div className="grid-box p-6 bg-black/25 relative overflow-hidden min-h-[180px] flex items-center">
+                <div className="grid-box p-4 md:p-5 bg-black/25 relative overflow-hidden min-h-[140px] flex items-center">
                   {isEditing ? (
                     <textarea
                       value={editText}
                       onChange={(e) => setEditText(e.target.value)}
-                      rows={6}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-xs font-mono text-on-surface focus:outline-none focus:border-primary/50"
+                      rows={4}
+                      className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-xs font-mono text-on-surface focus:outline-none focus:border-primary/50"
                     />
                   ) : (
                     <TextDisplay flatText={activeGeneration.content} typedChars={typedChars} />
@@ -633,7 +643,7 @@ export default function AIPractice() {
 
                 {/* Live Stats bar */}
                 {!isEditing && (
-                  <div className="flex items-center gap-6 grid-box p-3 bg-white/[0.005]">
+                  <div className="flex items-center gap-5 grid-box p-2.5 bg-white/[0.005]">
                     {[
                       { label: 'WPM', value: liveWpm || '—', cls: 'text-primary' },
                       { label: 'ACC', value: liveTotal > 0 ? `${liveAccuracy}%` : '—', cls: 'text-correct' },
@@ -642,7 +652,7 @@ export default function AIPractice() {
                     ].map(s => (
                       <div key={s.label} className="flex items-baseline gap-1.5">
                         <span className="text-[8px] font-black uppercase tracking-widest text-on-surface-variant/20">{s.label}</span>
-                        <span className={`text-lg font-black ${s.cls}`}>{s.value}</span>
+                        <span className={`text-base font-black ${s.cls}`}>{s.value}</span>
                       </div>
                     ))}
                     <button
@@ -657,15 +667,15 @@ export default function AIPractice() {
 
                 {/* Keyboard Helper & Coach */}
                 {!isEditing && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                     <VirtualKeyboard targetChar={targetChar} />
                     
                     {/* Coach commentary */}
-                    <div className="bg-primary/5 border border-primary/10 rounded-xl p-3.5 flex items-start gap-3">
-                      <Brain className="w-5 h-5 text-primary/75 shrink-0 mt-0.5" />
-                      <div className="space-y-1">
+                    <div className="bg-primary/5 border border-primary/10 rounded-xl p-2.5 flex items-start gap-2.5">
+                      <Brain className="w-4.5 h-4.5 text-primary/75 shrink-0 mt-0.5" />
+                      <div className="space-y-0.5">
                         <span className="text-[8px] font-black uppercase tracking-widest text-primary/60">AI Coach Advice</span>
-                        <p className="text-[10px] font-medium leading-relaxed text-on-surface-variant/80 font-sans italic">
+                        <p className="text-[10px] font-medium leading-normal text-on-surface-variant/80 font-sans italic">
                           &ldquo;{coachCommentary}&rdquo;
                         </p>
                       </div>
@@ -683,6 +693,19 @@ export default function AIPractice() {
       {/* ── Right Section: Sidebar (Presets & Recent Global Feed) ── */}
       <aside className="hidden md:flex flex-col w-[320px] flex-shrink-0 border-l border-white/5 bg-surface-container-low overflow-hidden">
         
+        {/* Create New Prompt Button (When text is active) */}
+        {activeGeneration && (
+          <div className="p-4 border-b border-white/5 shrink-0 bg-black/5">
+            <button
+              onClick={() => setActiveGeneration(null)}
+              className="w-full py-2.5 rounded-lg bg-primary text-background hover:bg-primary/90 transition-all text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-primary/10"
+            >
+              <Sparkles className="w-3.5 h-3.5 fill-current" />
+              Create New Prompt
+            </button>
+          </div>
+        )}
+
         {/* Presets Header */}
         <div className="p-4 border-b border-white/5 shrink-0">
           <div className="flex items-center gap-2 mb-3">
