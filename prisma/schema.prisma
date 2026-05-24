@@ -91,3 +91,11 @@ model WordPool {
   language  String   @default("english")
   createdAt DateTime @default(now())
 }
+
+model AIGeneration {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  prompt    String
+  content   String
+  category  String   @default("general")
+  createdAt DateTime @default(now())
+}

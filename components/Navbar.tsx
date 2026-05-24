@@ -69,6 +69,7 @@ export default function Navbar() {
   const navLinks = [
     { href: '/practice', label: 'Practice' },
     { href: '/learn', label: 'Learn' },
+    { href: '/ai-practice', label: 'AI Practice' },
     { href: '/leaderboard', label: 'Rankings' },
   ];
 
