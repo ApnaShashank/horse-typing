@@ -486,97 +486,107 @@ export default function LearnEngine({ lesson, onComplete }: LearnEngineProps) {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="flex flex-col gap-7 p-8 max-w-3xl mx-auto w-full"
+        className="flex flex-col gap-5 p-5 md:p-6 lg:p-8 max-w-4xl mx-auto w-full h-full justify-center"
       >
-        {/* Header */}
-        <div className="flex items-start gap-5">
-          <div
-            className="grid-box w-14 h-14 flex items-center justify-center flex-shrink-0 text-xl font-black"
-            style={{ backgroundColor: `${diffColor}12`, borderColor: `${diffColor}45`, color: diffColor }}
-          >
-            {lesson.level}
-          </div>
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-3 mb-2">
-              <span className="text-[10px] font-black uppercase tracking-[0.4em]" style={{ color: diffColor }}>
-                Level {lesson.level} · {lesson.difficulty}
-              </span>
-              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-on-surface-variant/25 grid-box px-2 py-0.5">
-                {lesson.type}
-              </span>
-            </div>
-            <h2 className="text-3xl font-black uppercase tracking-tighter text-on-surface leading-tight">{lesson.title}</h2>
-            <p className="text-sm text-on-surface-variant/45 font-bold uppercase tracking-wider mt-1">{lesson.subtitle}</p>
-          </div>
-        </div>
-
-        {/* Description */}
-        <div className="grid-box p-5 bg-white/[0.015]">
-          <p className="text-sm font-medium text-on-surface-variant/55 leading-relaxed">{lesson.description}</p>
-        </div>
-
-        {/* Keys to learn */}
-        <div>
-          <div className="text-[10px] font-black uppercase tracking-[0.45em] text-on-surface-variant/30 mb-3">Keys in this lesson</div>
-          <div className="flex flex-wrap gap-2">
-            {lesson.keys.map(k => {
-              const finger = KEY_FINGER_MAP[k] || KEY_FINGER_MAP[k.toLowerCase()];
-              const color  = finger ? FINGER_COLORS[finger] : '#666';
-              return (
-                <div key={k} className="flex flex-col items-center gap-1">
-                  <motion.div
-                    whileHover={{ scale: 1.12, y: -2 }}
-                    className="grid-box w-10 h-10 flex items-center justify-center text-sm font-black uppercase cursor-default"
-                    style={{ backgroundColor: `${color}15`, borderColor: `${color}50`, color }}
-                  >
-                    {k === ' ' ? '␣' : k}
-                  </motion.div>
-                  {finger && (
-                    <span className="text-[8px] font-bold uppercase tracking-wide text-center leading-tight" style={{ color: `${color}70` }}>
-                      {FINGER_DISPLAY_NAMES[finger]?.replace('Left ', 'L.').replace('Right ', 'R.')}
-                    </span>
-                  )}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch">
+          {/* Left Column: Lesson Header, Description & Start Button */}
+          <div className="flex flex-col justify-between gap-4 grid-box p-4 bg-white/[0.005]">
+            <div className="space-y-3">
+              {/* Header */}
+              <div className="flex items-start gap-4">
+                <div
+                  className="grid-box w-11 h-11 flex items-center justify-center flex-shrink-0 text-base font-black"
+                  style={{ backgroundColor: `${diffColor}12`, borderColor: `${diffColor}45`, color: diffColor }}
+                >
+                  {lesson.level}
                 </div>
-              );
-            })}
-          </div>
-        </div>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                    <span className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: diffColor }}>
+                      Level {lesson.level} · {lesson.difficulty}
+                    </span>
+                    <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-on-surface-variant/25 grid-box px-1.5 py-0.5">
+                      {lesson.type}
+                    </span>
+                  </div>
+                  <h2 className="text-xl font-black uppercase tracking-tighter text-on-surface leading-tight truncate">{lesson.title}</h2>
+                  <p className="text-[10px] text-on-surface-variant/45 font-bold uppercase tracking-wider">{lesson.subtitle}</p>
+                </div>
+              </div>
 
-        {/* Targets */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="grid-box p-5 bg-white/[0.015]">
-            <div className="text-[10px] font-black uppercase tracking-[0.4em] text-on-surface-variant/30 mb-2 flex items-center gap-2">
-              <Zap className="w-3 h-3" /> Target WPM
+              {/* Description */}
+              <div className="grid-box p-3.5 bg-white/[0.015] text-xs font-medium text-on-surface-variant/55 leading-relaxed">
+                {lesson.description}
+              </div>
             </div>
-            <div className="text-4xl font-black text-primary">{lesson.target_wpm}</div>
-            <div className="text-[10px] text-on-surface-variant/25 mt-1 uppercase tracking-widest">words per min</div>
+
+            {/* Start button */}
+            <motion.button
+              whileHover={{ scale: 1.015 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setPhase('typing')}
+              className="grid-box w-full py-3.5 flex items-center justify-center gap-2.5 text-[10px] font-black uppercase tracking-[0.3em] transition-all cursor-pointer mt-2"
+              style={{ borderColor: `${diffColor}55`, backgroundColor: `${diffColor}10`, color: diffColor }}
+            >
+              <Play className="w-3.5 h-3.5 fill-current" />
+              Start Lesson — Press Any Key
+            </motion.button>
           </div>
-          <div className="grid-box p-5 bg-white/[0.015]">
-            <div className="text-[10px] font-black uppercase tracking-[0.4em] text-on-surface-variant/30 mb-2 flex items-center gap-2">
-              <Target className="w-3 h-3" /> Target Accuracy
+
+          {/* Right Column: Targets, Keys to Learn & Finger Guide */}
+          <div className="flex flex-col justify-between gap-4 grid-box p-4 bg-white/[0.005]">
+            {/* Targets */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid-box p-3 bg-white/[0.015] text-center">
+                <div className="text-[8px] font-black uppercase tracking-[0.3em] text-on-surface-variant/30 mb-0.5 flex items-center justify-center gap-1">
+                  <Zap className="w-2.5 h-2.5" /> Target WPM
+                </div>
+                <div className="text-xl font-black text-primary">{lesson.target_wpm}</div>
+                <div className="text-[8px] text-on-surface-variant/25 uppercase tracking-widest mt-0.5">WPM</div>
+              </div>
+              <div className="grid-box p-3 bg-white/[0.015] text-center">
+                <div className="text-[8px] font-black uppercase tracking-[0.3em] text-on-surface-variant/30 mb-0.5 flex items-center justify-center gap-1">
+                  <Target className="w-2.5 h-2.5" /> Target ACC
+                </div>
+                <div className="text-xl font-black text-correct">{lesson.target_accuracy}%</div>
+                <div className="text-[8px] text-on-surface-variant/25 uppercase tracking-widest mt-0.5">Accuracy</div>
+              </div>
             </div>
-            <div className="text-4xl font-black text-correct">{lesson.target_accuracy}%</div>
-            <div className="text-[10px] text-on-surface-variant/25 mt-1 uppercase tracking-widest">correct keystrokes</div>
+
+            {/* Keys to learn */}
+            <div>
+              <div className="text-[9px] font-black uppercase tracking-[0.3em] text-on-surface-variant/30 mb-2">Keys in this lesson</div>
+              <div className="flex flex-wrap gap-1.5 max-h-[85px] overflow-y-auto no-scrollbar">
+                {lesson.keys.map(k => {
+                  const finger = KEY_FINGER_MAP[k] || KEY_FINGER_MAP[k.toLowerCase()];
+                  const color  = finger ? FINGER_COLORS[finger] : '#666';
+                  return (
+                    <div key={k} className="flex flex-col items-center gap-0.5">
+                      <motion.div
+                        whileHover={{ scale: 1.1, y: -1 }}
+                        className="grid-box w-8 h-8 flex items-center justify-center text-xs font-black uppercase cursor-default"
+                        style={{ backgroundColor: `${color}15`, borderColor: `${color}50`, color }}
+                      >
+                        {k === ' ' ? '␣' : k}
+                      </motion.div>
+                      {finger && (
+                        <span className="text-[7px] font-bold uppercase tracking-wide text-center leading-none mt-0.5" style={{ color: `${color}60` }}>
+                          {FINGER_DISPLAY_NAMES[finger]?.replace('Left ', 'L.').replace('Right ', 'R.')}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Finger color legend */}
+            <div>
+              <div className="text-[9px] font-black uppercase tracking-[0.3em] text-on-surface-variant/30 mb-2">Finger color guide</div>
+              <FingerLegend />
+            </div>
           </div>
         </div>
-
-        {/* Finger color legend */}
-        <div>
-          <div className="text-[10px] font-black uppercase tracking-[0.45em] text-on-surface-variant/30 mb-3">Finger color guide</div>
-          <FingerLegend />
-        </div>
-
-        {/* Start button */}
-        <motion.button
-          whileHover={{ scale: 1.015 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => setPhase('typing')}
-          className="grid-box w-full py-5 flex items-center justify-center gap-3 text-[12px] font-black uppercase tracking-[0.4em] transition-all"
-          style={{ borderColor: `${diffColor}55`, backgroundColor: `${diffColor}10`, color: diffColor }}
-        >
-          <Play className="w-4 h-4 fill-current" />
-          Start Lesson — Press Any Key
-        </motion.button>
       </motion.div>
     );
   }
