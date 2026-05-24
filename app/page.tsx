@@ -412,6 +412,7 @@ export default function Home() {
               initial={{ opacity: 0, x: 24 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.7, delay: 0.2 }}
+              className="w-full max-w-xl mx-auto lg:max-w-none"
             >
               <TypingPreview />
               <div className="mt-4 flex items-center justify-center gap-2 text-[10px] text-on-surface-variant/30 uppercase tracking-widest font-semibold">
@@ -438,7 +439,7 @@ export default function Home() {
 
       {/* ─── Stats Strip ───────────────────────────────────────── */}
       <section className="border-y border-white/5 bg-surface-container-low/40 py-12">
-        <div className="max-w-7xl mx-auto px-6 lg:px-10 grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="max-w-7xl mx-auto px-6 lg:px-10 grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
           {stats.map((s, i) => (
             <motion.div
               key={s.label}
@@ -448,10 +449,10 @@ export default function Home() {
               transition={{ delay: i * 0.08 }}
               className="text-center"
             >
-              <div className="text-3xl md:text-4xl font-black text-on-surface mb-1 font-['Manrope']">
+              <div className="text-2xl sm:text-3xl md:text-4xl font-black text-on-surface mb-1 font-['Manrope']">
                 <Counter to={s.value} suffix={s.suffix} />
               </div>
-              <div className="text-xs text-on-surface-variant/40 uppercase tracking-widest font-semibold">{s.label}</div>
+              <div className="text-[10px] sm:text-xs text-on-surface-variant/40 uppercase tracking-widest font-semibold">{s.label}</div>
             </motion.div>
           ))}
         </div>
@@ -483,7 +484,7 @@ export default function Home() {
               viewport={{ once: true }}
               transition={{ delay: i * 0.06 }}
               whileHover={{ y: -3, borderColor: 'rgba(153,153,153,0.25)' }}
-              className="group p-7 rounded-xl border border-white/6 bg-surface-container-low/50 hover:bg-surface-container-low transition-all duration-300 cursor-default"
+              className="group p-7 rounded-xl border border-white/6 bg-surface-container-low/50 hover:bg-surface-container-low transition-all duration-300 cursor-default max-w-md mx-auto sm:max-w-none w-full"
             >
               <div className="w-10 h-10 rounded-lg bg-primary/8 border border-primary/15 flex items-center justify-center text-primary mb-5 group-hover:bg-primary/15 transition-colors">
                 {f.icon}
@@ -535,7 +536,7 @@ export default function Home() {
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="space-y-3"
+              className="space-y-3 w-full max-w-xl mx-auto lg:max-w-none"
             >
               {/* Mock result card */}
               <div className="rounded-xl border border-white/8 bg-[#0e0e0e] p-6">
@@ -605,39 +606,43 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="rounded-xl border border-white/8 overflow-hidden"
+            className="rounded-xl border border-white/8 overflow-hidden bg-surface-container-low/20"
           >
-            {/* Header row */}
-            <div className="grid grid-cols-[32px_1fr_50px_60px] sm:grid-cols-[48px_1fr_80px_80px_100px] gap-2 sm:gap-4 px-4 sm:px-6 py-4 bg-surface-container-low border-b border-white/5 text-[9px] font-black uppercase tracking-[0.25em] sm:tracking-[0.3em] text-on-surface-variant/30">
-              <span>#</span>
-              <span>Typist</span>
-              <span className="text-center">WPM</span>
-              <span className="text-center">Acc</span>
-              <span className="text-right hidden sm:block">Mode</span>
-            </div>
+            <div className="overflow-x-auto">
+              <div className="min-w-[480px] sm:min-w-0">
+                {/* Header row */}
+                <div className="grid grid-cols-[32px_1fr_50px_60px] sm:grid-cols-[48px_1fr_80px_80px_100px] gap-2 sm:gap-4 px-4 sm:px-6 py-4 bg-surface-container-low border-b border-white/5 text-[9px] font-black uppercase tracking-[0.25em] sm:tracking-[0.3em] text-on-surface-variant/30">
+                  <span>#</span>
+                  <span>Typist</span>
+                  <span className="text-center">WPM</span>
+                  <span className="text-center">Acc</span>
+                  <span className="text-right hidden sm:block">Mode</span>
+                </div>
 
-            {[
-              { rank: 1, name: 'WPM_Demon', wpm: 148, acc: 99, mode: '15s', medal: 'text-yellow-500' },
-              { rank: 2, name: 'GhostKey', wpm: 139, acc: 98, mode: '15s', medal: 'text-gray-400' },
-              { rank: 3, name: 'TypeMaster', wpm: 132, acc: 100, mode: '15s', medal: 'text-amber-600' },
-              { rank: 4, name: 'FingerFlow', wpm: 127, acc: 97, mode: '15s', medal: '' },
-              { rank: 5, name: 'SpeedyFinger', wpm: 121, acc: 96, mode: '15s', medal: '' },
-            ].map((row, i) => (
-              <motion.div
-                key={row.rank}
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.06 }}
-                className="grid grid-cols-[32px_1fr_50px_60px] sm:grid-cols-[48px_1fr_80px_80px_100px] gap-2 sm:gap-4 px-4 sm:px-6 py-4.5 border-b border-white/4 hover:bg-white/[0.015] transition-colors items-center cursor-default"
-              >
-                <span className={`text-sm font-black ${row.medal || 'text-on-surface-variant/30'}`}>{row.rank}</span>
-                <span className="text-sm font-semibold text-on-surface/80 truncate">{row.name}</span>
-                <span className="text-center text-sm font-black text-primary">{row.wpm}</span>
-                <span className="text-center text-sm font-semibold text-on-surface-variant/60">{row.acc}%</span>
-                <span className="text-right text-[10px] font-bold text-on-surface-variant/30 uppercase tracking-wider hidden sm:block">{row.mode}</span>
-              </motion.div>
-            ))}
+                {[
+                  { rank: 1, name: 'WPM_Demon', wpm: 148, acc: 99, mode: '15s', medal: 'text-yellow-500' },
+                  { rank: 2, name: 'GhostKey', wpm: 139, acc: 98, mode: '15s', medal: 'text-gray-400' },
+                  { rank: 3, name: 'TypeMaster', wpm: 132, acc: 100, mode: '15s', medal: 'text-amber-600' },
+                  { rank: 4, name: 'FingerFlow', wpm: 127, acc: 97, mode: '15s', medal: '' },
+                  { rank: 5, name: 'SpeedyFinger', wpm: 121, acc: 96, mode: '15s', medal: '' },
+                ].map((row, i) => (
+                  <motion.div
+                    key={row.rank}
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.06 }}
+                    className="grid grid-cols-[32px_1fr_50px_60px] sm:grid-cols-[48px_1fr_80px_80px_100px] gap-2 sm:gap-4 px-4 sm:px-6 py-4.5 border-b border-white/4 hover:bg-white/[0.015] transition-colors items-center cursor-default"
+                  >
+                    <span className={`text-sm font-black ${row.medal || 'text-on-surface-variant/30'}`}>{row.rank}</span>
+                    <span className="text-sm font-semibold text-on-surface/80 truncate">{row.name}</span>
+                    <span className="text-center text-sm font-black text-primary">{row.wpm}</span>
+                    <span className="text-center text-sm font-semibold text-on-surface-variant/60">{row.acc}%</span>
+                    <span className="text-right text-[10px] font-bold text-on-surface-variant/30 uppercase tracking-wider hidden sm:block">{row.mode}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
 
             <div className="px-6 py-8 text-center bg-surface-container-low/40">
               <p className="text-sm text-on-surface-variant/40 mb-4">Your best score per mode appears here once you start typing.</p>
@@ -701,7 +706,7 @@ export default function Home() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
-              className="grid-box p-8 bg-surface-container-low/40 border border-white/5 hover:border-white/10 rounded-2xl flex flex-col justify-between"
+              className="grid-box p-8 bg-surface-container-low/40 border border-white/5 hover:border-white/10 rounded-2xl flex flex-col justify-between max-w-md mx-auto md:max-w-none w-full"
             >
               <div className="space-y-6">
                 <div>
@@ -744,7 +749,7 @@ export default function Home() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
-              className="grid-box p-8 bg-primary/[0.02] border border-primary/20 hover:border-primary/45 rounded-2xl flex flex-col justify-between relative shadow-xl shadow-primary/5"
+              className="grid-box p-8 bg-primary/[0.02] border border-primary/20 hover:border-primary/45 rounded-2xl flex flex-col justify-between relative shadow-xl shadow-primary/5 max-w-md mx-auto md:max-w-none w-full"
             >
               <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 rounded-full bg-primary text-background text-[8px] font-black uppercase tracking-wider">
                 Most Popular
