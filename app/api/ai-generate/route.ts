@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getSession } from '@/lib/auth';
+import { getSystemConfig } from '@/lib/config';
 
 export async function GET() {
   try {
@@ -19,6 +21,36 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const session = await getSession();
+    if (!session || !session.userId) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized. Please sign in.' },
+        { status: 401 }
+      );
+    }
+
+    const dbUser = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { isPro: true, aiPracticeCount: true }
+    });
+
+    if (!dbUser) {
+      return NextResponse.json(
+        { success: false, error: 'User not found.' },
+        { status: 404 }
+      );
+    }
+
+    if (!dbUser.isPro) {
+      const config = await getSystemConfig();
+      if (dbUser.aiPracticeCount >= config.freeAiLimit) {
+        return NextResponse.json(
+          { success: false, error: `You have reached your limit of ${config.freeAiLimit} free AI generations. Please upgrade to Pro.` },
+          { status: 403 }
+        );
+      }
+    }
+
     const { prompt, category } = await req.json();
 
     if (!prompt || typeof prompt !== 'string') {
@@ -94,6 +126,12 @@ export async function POST(req: Request) {
         content: generatedContent,
         category: selectedCategory,
       },
+    });
+
+    // Increment user's AI practice count
+    await prisma.user.update({
+      where: { id: session.userId },
+      data: { aiPracticeCount: { increment: 1 } },
     });
 
     return NextResponse.json({ success: true, generation: saved });

@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, ChevronRight, ChevronDown, Lock, Check,
-  Zap, Flame, Trophy, Keyboard, Play, Menu, X
+  Zap, Flame, Trophy, Keyboard, Play, Menu, X, Crown, RefreshCw
 } from 'lucide-react';
 import { LESSONS, DIFFICULTY_GROUPS, getDifficultyColor, type Difficulty, type Lesson } from './lessonData';
 import LearnEngine, { type LessonResult } from './LearnEngine';
@@ -23,6 +24,12 @@ type ProgressEntry = {
 };
 type ProgressData = Record<number, ProgressEntry>;
 type StreakData   = { count: number; lastDate: string };
+
+type SystemConfigType = {
+  freeAiLimit: number;
+  freeLearnLimit: number;
+  freePracticeLimitBeforeLogin: number;
+};
 
 function loadProgress(): ProgressData {
   if (typeof window === 'undefined') return {};
@@ -347,6 +354,12 @@ export default function LearnPage() {
   const [engineKey, setEngineKey]       = useState(0); // force re-mount on retry
   const [user, setUser]                 = useState<any>(null);
 
+  const [sysConfig, setSysConfig] = useState<SystemConfigType | null>(null);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const router = useRouter();
+
   // Load from localStorage on mount & check query params and login status
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -366,6 +379,16 @@ export default function LearnPage() {
       })
       .catch(() => {});
 
+    // Fetch paywall settings
+    fetch('/api/system-config')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d?.success) {
+          setSysConfig(d);
+        }
+      })
+      .catch(() => {});
+
     // Check query params for redirected lesson suggestions
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -378,6 +401,96 @@ export default function LearnPage() {
       }
     }
   }, []);
+
+  const handleUpgradePaywall = async () => {
+    if (!user) {
+      window.location.href = '/login?redirect=learn';
+      return;
+    }
+    if (user.isPro) {
+      setToast({ type: 'success', message: 'You are already a Pro member!' });
+      setShowPaywall(false);
+      return;
+    }
+
+    setCheckoutLoading(true);
+    try {
+      const res = await fetch('/api/create-order', {
+        method: 'POST',
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to create order');
+      }
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: data.amount,
+        currency: data.currency,
+        name: "Horse Typing Pro",
+        description: "Upgrade to Pro to unlock all 56 lessons",
+        image: "https://ik.imagekit.io/DEMOPROJECT/3c470dc2-3a50-4f45-9960-deb3429114e8.png",
+        order_id: data.order_id,
+        handler: async function (response: any) {
+          try {
+            setCheckoutLoading(true);
+            const verifyRes = await fetch('/api/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+            const verifyData = await verifyRes.json();
+            if (verifyRes.ok && verifyData.success) {
+              setToast({ type: 'success', message: 'Success! You are now a Pro member. All 56 lessons unlocked!' });
+              setUser((prev: any) => prev ? { ...prev, isPro: true } : null);
+              setShowPaywall(false);
+            } else {
+              setToast({ type: 'error', message: verifyData.error || 'Payment verification failed.' });
+            }
+          } catch (verifyErr: any) {
+            setToast({ type: 'error', message: 'Error verifying payment signature.' });
+          } finally {
+            setCheckoutLoading(false);
+          }
+        },
+        prefill: {
+          name: user.name || "",
+          email: user.email || "",
+        },
+        theme: {
+          color: "#9333ea",
+        },
+        modal: {
+          ondismiss: function () {
+            setToast({ type: 'error', message: 'Payment cancelled by user.' });
+            setCheckoutLoading(false);
+          }
+        }
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on('payment.failed', function (response: any) {
+        setToast({ type: 'error', message: response.error.description || 'Payment execution failed.' });
+        setCheckoutLoading(false);
+      });
+      rzp.open();
+    } catch (err: any) {
+      setToast({ type: 'error', message: err.message || 'Error initiating checkout.' });
+      setCheckoutLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (toast) {
+      const t = setTimeout(() => setToast(null), 5000);
+      return () => clearTimeout(t);
+    }
+  }, [toast]);
 
   const selectedLesson = selectedId ? LESSONS.find(l => l.id === selectedId) ?? null : null;
 
@@ -404,6 +517,22 @@ export default function LearnPage() {
 
     setStreak(updateStreak());
 
+    // Sync lesson completion to database if user is logged in
+    if (user) {
+      fetch('/api/learn/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lessonId: selectedId }),
+      })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d?.success && d?.completedLessons) {
+          setUser((prev: any) => prev ? { ...prev, completedLessons: d.completedLessons } : null);
+        }
+      })
+      .catch(err => console.error('Failed to sync lesson completion:', err));
+    }
+
     // Auto-advance to next lesson if passed
     if (result.passed && selectedId !== null) {
       const nextLesson = LESSONS.find(l => l.id === selectedId + 1);
@@ -418,6 +547,14 @@ export default function LearnPage() {
   }, [selectedId]);
 
   const handleSelectLesson = (id: number) => {
+    const isCompleted = progress[id]?.completed || user?.completedLessons?.includes(id);
+    const completedCount = user?.completedLessons?.length ?? countCompleted(progress);
+    
+    if (!user?.isPro && sysConfig && completedCount >= sysConfig.freeLearnLimit && !isCompleted) {
+      setShowPaywall(true);
+      return;
+    }
+
     setSelectedId(id);
     setEngineKey(k => k + 1);
     setSidebarOpen(false);
@@ -585,6 +722,84 @@ export default function LearnPage() {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Learn Pro Paywall Modal */}
+      <AnimatePresence>
+        {showPaywall && (
+          <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="w-full max-w-md grid-box p-6 bg-gradient-to-br from-primary/[0.05] via-surface-container-low to-surface-container-low border border-primary/25 rounded-2xl relative overflow-hidden space-y-5"
+            >
+              <div className="absolute top-0 right-0 p-8 opacity-[0.02] pointer-events-none">
+                <Crown className="w-48 h-48 text-primary" />
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-primary/10 border border-primary/20 rounded-lg text-primary">
+                  <Crown className="w-4 h-4 fill-current" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black uppercase tracking-wider text-primary">Unlock All 56 Lessons</h3>
+                  <p className="text-[10px] text-on-surface-variant/40 uppercase tracking-widest mt-0.5">Horse Typing Pro</p>
+                </div>
+              </div>
+
+              <p className="text-xs text-on-surface-variant/70 leading-relaxed font-sans">
+                You have reached your limit of <strong className="text-primary font-bold">{sysConfig?.freeLearnLimit} free lessons</strong>. Upgrade to Pro to unlock the full 56-lesson structured touch-typing curriculum!
+              </p>
+
+              <div className="flex items-baseline gap-1.5 py-1">
+                <span className="text-2xl font-black text-primary">$5</span>
+                <span className="text-[10px] font-bold text-on-surface-variant/40 uppercase">/ month (approx. 400 INR)</span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <button
+                  onClick={handleUpgradePaywall}
+                  disabled={checkoutLoading}
+                  className="flex-1 py-3 bg-primary text-background hover:bg-primary/95 rounded-lg text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center min-h-[40px] font-bold"
+                >
+                  {checkoutLoading ? (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  ) : user ? (
+                    "Upgrade to Pro"
+                  ) : (
+                    "Sign In to Upgrade"
+                  )}
+                </button>
+                <button
+                  onClick={() => setShowPaywall(false)}
+                  className="flex-1 py-3 border border-white/10 hover:bg-white/5 rounded-lg text-xs font-black uppercase tracking-wider text-on-surface-variant/60 hover:text-on-surface transition-colors cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className={`fixed bottom-6 right-6 z-50 p-4 rounded-xl border border-white/8 flex items-center gap-3 shadow-2xl backdrop-blur-md ${
+              toast.type === 'success'
+                ? 'bg-correct/10 border-correct/30 text-correct'
+                : 'bg-error/10 border-error/30 text-error'
+            }`}
+          >
+            <div className="text-xs font-black tracking-wide">{toast.message}</div>
+            <button onClick={() => setToast(null)} className="text-[10px] font-black uppercase hover:opacity-75 transition-opacity">Close</button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

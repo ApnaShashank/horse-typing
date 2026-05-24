@@ -17,7 +17,11 @@ export async function GET() {
         name: true,
         email: true,
         createdAt: true,
-        userStat: true
+        userStat: true,
+        isPro: true,
+        aiPracticeCount: true,
+        completedLessons: true,
+        practiceRunsCount: true
       }
     });
 

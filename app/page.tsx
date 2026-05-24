@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { motion, useInView, useScroll, useTransform } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { motion, useInView, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import {
   ArrowRight, Trophy, BarChart3, Zap, Target, Users, Clock, CheckCircle, ChevronDown,
-  Brain, Sparkles, Keyboard
+  Brain, Sparkles, Keyboard, RefreshCw
 } from "lucide-react";
 
 // ─── Live Typing Demo ─────────────────────────────────────────────
@@ -109,10 +110,122 @@ function Counter({ to, suffix = '' }: { to: number; suffix?: string }) {
 
 // ─── Main Component ───────────────────────────────────────────────
 export default function Home() {
+  const router = useRouter();
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const heroOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
   const heroY = useTransform(scrollYProgress, [0, 0.6], [0, -60]);
+
+  const [user, setUser] = useState<any>(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.user);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoadingUser(false);
+      }
+    }
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    if (toast) {
+      const t = setTimeout(() => setToast(null), 5000);
+      return () => clearTimeout(t);
+    }
+  }, [toast]);
+
+  const handleUpgrade = async () => {
+    if (loadingUser) return;
+    if (!user) {
+      router.push('/login?redirect=pricing');
+      return;
+    }
+    if (user.isPro) {
+      setToast({ type: 'success', message: 'You are already a Pro member!' });
+      return;
+    }
+
+    setCheckoutLoading(true);
+    try {
+      const res = await fetch('/api/create-order', {
+        method: 'POST',
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to create order');
+      }
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: data.amount,
+        currency: data.currency,
+        name: "Horse Typing Pro",
+        description: "Monthly subscription upgrade",
+        image: "https://ik.imagekit.io/DEMOPROJECT/3c470dc2-3a50-4f45-9960-deb3429114e8.png",
+        order_id: data.order_id,
+        handler: async function (response: any) {
+          try {
+            setCheckoutLoading(true);
+            const verifyRes = await fetch('/api/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+            const verifyData = await verifyRes.json();
+            if (verifyRes.ok && verifyData.success) {
+              setToast({ type: 'success', message: 'Success! You are now a Pro member. Enjoy AI features!' });
+              setUser((prev: any) => prev ? { ...prev, isPro: true } : null);
+            } else {
+              setToast({ type: 'error', message: verifyData.error || 'Payment verification failed.' });
+            }
+          } catch (verifyErr: any) {
+            setToast({ type: 'error', message: 'Error verifying payment signature.' });
+          } finally {
+            setCheckoutLoading(false);
+          }
+        },
+        prefill: {
+          name: user.name || "",
+          email: user.email || "",
+        },
+        theme: {
+          color: "#9333ea",
+        },
+        modal: {
+          ondismiss: function () {
+            setToast({ type: 'error', message: 'Payment cancelled by user.' });
+            setCheckoutLoading(false);
+          }
+        }
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on('payment.failed', function (response: any) {
+        setToast({ type: 'error', message: response.error.description || 'Payment execution failed.' });
+        setCheckoutLoading(false);
+      });
+      rzp.open();
+    } catch (err: any) {
+      setToast({ type: 'error', message: err.message || 'Error initiating checkout.' });
+      setCheckoutLoading(false);
+    }
+  };
 
   const features = [
     {
@@ -621,12 +734,19 @@ export default function Home() {
                 </ul>
               </div>
               <div className="mt-8">
-                <Link
-                  href="/register"
-                  className="block w-full text-center px-6 py-3.5 bg-primary text-background hover:bg-primary/90 rounded-lg text-xs font-black uppercase tracking-widest transition-all duration-200 shadow-md shadow-primary/10 hover:scale-[1.01]"
+                <button
+                  onClick={handleUpgrade}
+                  disabled={checkoutLoading || (user && user.isPro)}
+                  className="block w-full text-center px-6 py-3.5 bg-primary text-background hover:bg-primary/90 rounded-lg text-xs font-black uppercase tracking-widest transition-all duration-200 shadow-md shadow-primary/10 hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center min-h-[44px]"
                 >
-                  Upgrade to Pro
-                </Link>
+                  {checkoutLoading ? (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin mx-auto" />
+                  ) : user && user.isPro ? (
+                    "Active Pro Member"
+                  ) : (
+                    "Upgrade to Pro"
+                  )}
+                </button>
               </div>
             </motion.div>
           </div>
@@ -671,6 +791,24 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className={`fixed bottom-6 right-6 z-50 p-4 rounded-xl border border-white/8 flex items-center gap-3 shadow-2xl backdrop-blur-md ${
+              toast.type === 'success'
+                ? 'bg-correct/10 border-correct/30 text-correct'
+                : 'bg-error/10 border-error/30 text-error'
+            }`}
+          >
+            <div className="text-xs font-black tracking-wide">{toast.message}</div>
+            <button onClick={() => setToast(null)} className="text-[10px] font-black uppercase hover:opacity-75 transition-opacity">Close</button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

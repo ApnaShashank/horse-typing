@@ -4,6 +4,7 @@ import "./globals.css";
 import "./fonts.css";
 import Navbar from "@/components/Navbar";
 import ConditionalFooter from "@/components/ConditionalFooter";
+import Script from "next/script";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -85,6 +86,7 @@ export default function RootLayout({
         <Navbar />
         <main className="grow">{children}</main>
         <ConditionalFooter />
+        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       </body>
     </html>
   );

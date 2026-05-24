@@ -5,7 +5,7 @@ import { useTypingEngine, IN_MAP } from './useTypingEngine';
 import { GenerationOptions } from './words';
 import {
   Clock, Type, Quote, Mountain, Wrench, X, Play, RotateCcw,
-  Settings2, BarChart3, RefreshCw, TrendingUp, Sun, Moon
+  Settings2, BarChart3, RefreshCw, TrendingUp, Sun, Moon, Lock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -414,14 +414,40 @@ export default function Practice() {
   const [fontFamily, setFontFamily] = useState<'mono' | 'sans' | 'serif'>('mono');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
+  const [guestRunsCount, setGuestRunsCount] = useState(0);
+  const [sysConfig, setSysConfig] = useState<any>(null);
+
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.ok ? r.json() : null).then(d => {
       if (d?.authenticated) setUser(d.user);
     }).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const runs = parseInt(localStorage.getItem('ht_guest_practice_runs') || '0', 10);
+      setGuestRunsCount(runs);
+    }
+
+    // Fetch paywall settings
+    fetch('/api/system-config')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d?.success) {
+          setSysConfig(d);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const handleTestFinish = async (stats: any) => {
-    if (!user) return;
+    if (!user) {
+      // Guest practice runs increment
+      const nextRuns = guestRunsCount + 1;
+      setGuestRunsCount(nextRuns);
+      localStorage.setItem('ht_guest_practice_runs', String(nextRuns));
+      return;
+    }
     try {
       await fetch('/api/results', {
         method: 'POST',
@@ -974,6 +1000,53 @@ export default function Practice() {
 
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // Intercept and show register paywall if guest user exceeds practice limits
+  if (!user && sysConfig && guestRunsCount >= sysConfig.freePracticeLimitBeforeLogin) {
+    return (
+      <div className="min-h-[calc(100vh-3.5rem)] mt-14 flex items-center justify-center p-6 bg-background font-mono text-on-surface select-none">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="w-full max-w-md grid-box p-8 bg-gradient-to-br from-primary/[0.04] via-surface-container-low to-surface-container-low border border-primary/20 rounded-2xl relative overflow-hidden text-center space-y-6"
+        >
+          <div className="absolute top-0 right-0 p-8 opacity-[0.01] pointer-events-none">
+            <Lock className="w-48 h-48 text-primary" />
+          </div>
+
+          <div className="w-16 h-16 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto text-primary">
+            <Lock className="w-7 h-7" />
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-xl font-black uppercase tracking-tight text-primary">Register Free to Continue</h2>
+            <p className="text-[10px] text-on-surface-variant/40 uppercase tracking-widest">
+              Guest run limit reached
+            </p>
+          </div>
+
+          <p className="text-xs text-on-surface-variant/70 leading-relaxed font-sans">
+            You have completed your limit of <strong className="text-primary font-bold">{sysConfig.freePracticeLimitBeforeLogin} free guest runs</strong>. Register a free account to continue practicing, track your WPM stats over time, and participate in global rankings!
+          </p>
+
+          <div className="flex flex-col gap-3 pt-2">
+            <a
+              href="/register?redirect=practice"
+              className="w-full py-4 rounded-xl bg-primary text-background hover:bg-primary/95 text-xs font-black uppercase tracking-widest transition-all cursor-pointer flex items-center justify-center font-bold"
+            >
+              Create Free Account
+            </a>
+            <a
+              href="/login?redirect=practice"
+              className="w-full py-4 rounded-xl border border-white/10 hover:bg-white/5 text-xs font-black uppercase tracking-widest transition-all cursor-pointer flex items-center justify-center"
+            >
+              Sign In
+            </a>
+          </div>
+        </motion.div>
       </div>
     );
   }

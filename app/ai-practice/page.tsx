@@ -25,6 +25,12 @@ type Result = {
   time: number;
 };
 
+type SystemConfigType = {
+  freeAiLimit: number;
+  freeLearnLimit: number;
+  freePracticeLimitBeforeLogin: number;
+};
+
 // ─── Key Finger Mapping for Highlight Hint ────────────────────────
 const KEY_FINGER_MAP: Record<string, string> = {
   '1': 'left-pinky', '2': 'left-ring', '3': 'left-middle', '4': 'left-index',
@@ -77,30 +83,35 @@ const PRESETS = [
     label: 'Resignation Mail',
     prompt: 'Write a formal resignation email to my manager due to personal reasons.',
     category: 'email',
+    content: `Dear Manager,\n\nPlease accept this email as formal notification that I am resigning from my position. My last day will be in two weeks. Thank you for the support during my time here.`,
     icon: <Mail className="w-3.5 h-3.5" />,
   },
   {
     label: 'Python Bubble Sort',
     prompt: 'Create a simple Python function to perform bubble sort on an array.',
     category: 'code',
+    content: `def bubble_sort(arr):\n  n = len(arr)\n  for i in range(n):\n    for j in range(0, n-i-1):\n      if arr[j] > arr[j+1]:\n        arr[j], arr[j+1] = arr[j+1], arr[j]\n  return arr`,
     icon: <Code className="w-3.5 h-3.5" />,
   },
   {
     label: 'React Hook',
     prompt: 'Write a custom React hook in TypeScript to fetch data from an API.',
     category: 'code',
+    content: `import { useState, useEffect } from "react";\n\nexport function useFetch(url) {\n  const [data, setData] = useState(null);\n  useEffect(() => {\n    fetch(url).then(r => r.json()).then(setData);\n  }, [url]);\n  return data;\n}`,
     icon: <Code2 className="w-3.5 h-3.5" />,
   },
   {
     label: 'Creative Short Story',
     prompt: 'Write a mysterious short paragraph about an ancient key found in a desert.',
     category: 'creative',
+    content: `Under the blazing sun of the desert, he found a metal chest buried in the sand. Inside lay an ancient iron key, cold to the touch. It had no markings except a tiny star engraved on the tip.`,
     icon: <BookOpen className="w-3.5 h-3.5" />,
   },
   {
     label: 'SQL Table Join',
     prompt: 'Write an SQL query joining users and transactions to find total spend per user.',
     category: 'code',
+    content: `SELECT u.id, u.name, SUM(t.amount) AS total_spend\nFROM users u\nJOIN transactions t ON u.id = t.user_id\nGROUP BY u.id, u.name\nORDER BY total_spend DESC;`,
     icon: <Code className="w-3.5 h-3.5" />,
   },
 ];
@@ -199,6 +210,129 @@ export default function AIPractice() {
   const [recents, setRecents] = useState<Generation[]>([]);
   const [activeGeneration, setActiveGeneration] = useState<Generation | null>(null);
 
+  const [user, setUser] = useState<any>(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [sysConfig, setSysConfig] = useState<SystemConfigType | null>(null);
+
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.user);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoadingUser(false);
+      }
+    }
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/system-config')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d?.success) {
+          setSysConfig(d);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (toast) {
+      const t = setTimeout(() => setToast(null), 5000);
+      return () => clearTimeout(t);
+    }
+  }, [toast]);
+
+  const handleUpgrade = async () => {
+    if (loadingUser) return;
+    if (!user) {
+      window.location.href = '/login?redirect=ai-practice';
+      return;
+    }
+    if (user.isPro) {
+      setToast({ type: 'success', message: 'You are already a Pro member!' });
+      return;
+    }
+
+    setCheckoutLoading(true);
+    try {
+      const res = await fetch('/api/create-order', {
+        method: 'POST',
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to create order');
+      }
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: data.amount,
+        currency: data.currency,
+        name: "Horse Typing Pro",
+        description: "Upgrade to Pro to generate custom prompts",
+        image: "https://ik.imagekit.io/DEMOPROJECT/3c470dc2-3a50-4f45-9960-deb3429114e8.png",
+        order_id: data.order_id,
+        handler: async function (response: any) {
+          try {
+            setCheckoutLoading(true);
+            const verifyRes = await fetch('/api/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+            const verifyData = await verifyRes.json();
+            if (verifyRes.ok && verifyData.success) {
+              setToast({ type: 'success', message: 'Success! You are now a Pro member. You can now generate custom prompts!' });
+              setUser((prev: any) => prev ? { ...prev, isPro: true } : null);
+            } else {
+              setToast({ type: 'error', message: verifyData.error || 'Payment verification failed.' });
+            }
+          } catch (verifyErr: any) {
+            setToast({ type: 'error', message: 'Error verifying payment signature.' });
+          } finally {
+            setCheckoutLoading(false);
+          }
+        },
+        prefill: {
+          name: user.name || "",
+          email: user.email || "",
+        },
+        theme: {
+          color: "#9333ea",
+        },
+        modal: {
+          ondismiss: function () {
+            setToast({ type: 'error', message: 'Payment cancelled by user.' });
+            setCheckoutLoading(false);
+          }
+        }
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on('payment.failed', function (response: any) {
+        setToast({ type: 'error', message: response.error.description || 'Payment execution failed.' });
+        setCheckoutLoading(false);
+      });
+      rzp.open();
+    } catch (err: any) {
+      setToast({ type: 'error', message: err.message || 'Error initiating checkout.' });
+      setCheckoutLoading(false);
+    }
+  };
+
   // Custom editor
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState('');
@@ -263,9 +397,11 @@ export default function AIPractice() {
       if (res.ok) {
         const data = await res.json();
         setActiveGeneration(data.generation);
+        setUser((prev: any) => prev ? { ...prev, aiPracticeCount: (prev.aiPracticeCount || 0) + 1 } : null);
         fetchRecents(); // Refresh sidebar list
       } else {
-        alert('Failed to generate text. Please try again.');
+        const errData = await res.json();
+        alert(errData.error || 'Failed to generate text. Please try again.');
       }
     } catch (e) {
       console.error(e);
@@ -390,8 +526,14 @@ export default function AIPractice() {
 
   // Preset click
   const applyPreset = (preset: typeof PRESETS[0]) => {
-    setPrompt(preset.prompt);
-    setCategory(preset.category);
+    const mockGen: Generation = {
+      id: `preset_${preset.category}_${Date.now()}`,
+      prompt: preset.prompt,
+      content: preset.content,
+      category: preset.category,
+      createdAt: new Date().toISOString(),
+    };
+    handleLoadGeneration(mockGen);
   };
 
   // AI Coach Commentary generator
@@ -433,78 +575,188 @@ export default function AIPractice() {
 
           <AnimatePresence mode="wait">
             {!activeGeneration ? (
-              // Prompt Setup Form
-              <motion.div
-                key="prompt-form"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
-                className="grid-box p-5 bg-surface-container-low border border-white/5 space-y-4 rounded-2xl relative overflow-hidden"
-              >
-                <div className="absolute top-0 right-0 p-8 opacity-[0.01] pointer-events-none">
-                  <Brain className="w-48 h-48" />
+              loadingUser ? (
+                <div className="grid-box p-8 rounded-2xl bg-surface-container-low border border-white/5 flex flex-col items-center justify-center min-h-[200px] space-y-3">
+                  <RefreshCw className="w-5 h-5 text-primary animate-spin" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant/40">Checking subscription status...</span>
                 </div>
-
-                <div className="space-y-1">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                    What would you like to practice today?
-                  </h3>
-                  <p className="text-[10px] text-on-surface-variant/35 uppercase tracking-wide">
-                    Input a request or click a quick preset on the side panel
-                  </p>
-                </div>
-
-                <form onSubmit={handleGenerate} className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-on-surface-variant/40">Enter Prompt</label>
-                    <textarea
-                      value={prompt}
-                      onChange={(e) => setPrompt(e.target.value)}
-                      placeholder="e.g. Write a resignation letter to company, or write a bubble sort code in JavaScript..."
-                      rows={3}
-                      className="w-full bg-black/35 border border-white/8 rounded-xl p-3.5 text-xs font-sans text-on-surface placeholder:text-on-surface-variant/20 focus:outline-none focus:border-primary/45 transition-colors"
-                    />
+              ) : !user ? (
+                // Beautiful Sign In Paywall Card
+                <motion.div
+                  key="signin-paywall-card"
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="grid-box p-6 bg-gradient-to-br from-primary/[0.05] via-surface-container-low to-surface-container-low border border-primary/20 rounded-2xl relative overflow-hidden flex flex-col justify-between"
+                >
+                  <div className="absolute top-0 right-0 p-8 opacity-[0.02] pointer-events-none">
+                    <Brain className="w-48 h-48 text-primary" />
                   </div>
 
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[9px] font-black uppercase tracking-widest text-on-surface-variant/40">Category:</span>
-                      <select
-                        value={category}
-                        onChange={(e) => setCategory(e.target.value)}
-                        className="bg-surface-container-highest border border-white/8 text-[10px] font-black uppercase tracking-wider text-on-surface rounded px-3 py-1.5 focus:outline-none"
-                      >
-                        <option value="general">General Paragraph</option>
-                        <option value="email">Email Draft</option>
-                        <option value="code">Source Code</option>
-                        <option value="creative">Creative Writing</option>
-                      </select>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 bg-primary/10 border border-primary/20 rounded-lg text-primary">
+                        <Sparkles className="w-4 h-4 fill-current" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-black uppercase tracking-wider text-primary">Generate Custom AI Prompts</h3>
+                        <p className="text-[10px] text-on-surface-variant/40 uppercase tracking-widest mt-0.5">Free Account / Pro Account</p>
+                      </div>
                     </div>
 
-                    <button
-                      type="submit"
-                      disabled={loading || !prompt.trim()}
-                      className={`px-5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
-                        loading || !prompt.trim()
-                          ? 'bg-primary/10 text-primary cursor-not-allowed border border-primary/20'
-                          : 'bg-primary text-background hover:bg-primary/95 hover:scale-[1.02]'
-                      }`}
+                    <p className="text-xs text-on-surface-variant/70 leading-relaxed font-sans">
+                      Please <strong className="text-primary font-bold">sign in or register a free account</strong> to access custom AI prompt typing practice. Registered users get {sysConfig?.freeAiLimit || 3} free generations before requiring a Pro upgrade!
+                    </p>
+                  </div>
+
+                  <div className="mt-5 flex flex-col sm:flex-row items-center gap-3">
+                    <a
+                      href="/login?redirect=ai-practice"
+                      className="w-full sm:w-auto px-6 py-3 bg-primary text-background hover:bg-primary/95 hover:scale-[1.01] rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center min-h-[40px] shrink-0 font-bold"
                     >
-                      {loading ? (
-                        <>
-                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                          Generating...
-                        </>
+                      Sign In / Register
+                    </a>
+                    <span className="text-[9px] text-on-surface-variant/35 uppercase tracking-wide leading-relaxed font-sans text-center sm:text-left">
+                      Or click one of the preset prompts or global feed items on the right to practice for free!
+                    </span>
+                  </div>
+                </motion.div>
+              ) : user.isPro || (sysConfig && user.aiPracticeCount < sysConfig.freeAiLimit) ? (
+                // Prompt Setup Form
+                <motion.div
+                  key="prompt-form"
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -16 }}
+                  className="grid-box p-5 bg-surface-container-low border border-white/5 space-y-4 rounded-2xl relative overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 p-8 opacity-[0.01] pointer-events-none">
+                    <Brain className="w-48 h-48" />
+                  </div>
+
+                  <div className="space-y-1">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                      What would you like to practice today?
+                    </h3>
+                    <p className="text-[10px] text-on-surface-variant/35 uppercase tracking-wide">
+                      Input a request or click a quick preset on the side panel
+                    </p>
+                  </div>
+
+                  <form onSubmit={handleGenerate} className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-on-surface-variant/40">Enter Prompt</label>
+                      <textarea
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                        placeholder="e.g. Write a resignation letter to company, or write a bubble sort code in JavaScript..."
+                        rows={3}
+                        className="w-full bg-black/35 border border-white/8 rounded-xl p-3.5 text-xs font-sans text-on-surface placeholder:text-on-surface-variant/20 focus:outline-none focus:border-primary/45 transition-colors"
+                      />
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-on-surface-variant/40">Category:</span>
+                        <select
+                          value={category}
+                          onChange={(e) => setCategory(e.target.value)}
+                          className="bg-surface-container-highest border border-white/8 text-[10px] font-black uppercase tracking-wider text-on-surface rounded px-3 py-1.5 focus:outline-none"
+                        >
+                          <option value="general">General Paragraph</option>
+                          <option value="email">Email Draft</option>
+                          <option value="code">Source Code</option>
+                          <option value="creative">Creative Writing</option>
+                        </select>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={loading || !prompt.trim()}
+                        className={`px-5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
+                          loading || !prompt.trim()
+                            ? 'bg-primary/10 text-primary cursor-not-allowed border border-primary/20'
+                            : 'bg-primary text-background hover:bg-primary/95 hover:scale-[1.02]'
+                        }`}
+                      >
+                        {loading ? (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-3.5 h-3.5" />
+                            Generate Practice Text
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </motion.div>
+              ) : (
+                // Beautiful Premium Paywall Card
+                <motion.div
+                  key="paywall-card"
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="grid-box p-6 bg-gradient-to-br from-primary/[0.05] via-surface-container-low to-surface-container-low border border-primary/20 rounded-2xl relative overflow-hidden flex flex-col justify-between"
+                >
+                  <div className="absolute top-0 right-0 p-8 opacity-[0.02] pointer-events-none">
+                    <Brain className="w-48 h-48 text-primary" />
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 bg-primary/10 border border-primary/20 rounded-lg text-primary">
+                        <Sparkles className="w-4 h-4 fill-current" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-black uppercase tracking-wider text-primary">Unlock Custom AI Prompts</h3>
+                        <p className="text-[10px] text-on-surface-variant/40 uppercase tracking-widest mt-0.5">Horse Typing Pro Feature</p>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-on-surface-variant/70 leading-relaxed font-sans">
+                      You have used your limit of <strong className="text-primary font-bold">{sysConfig?.freeAiLimit} free AI generations</strong>. Upgrade to a <strong className="text-primary font-bold">Pro Account</strong> to describe exactly what you want to practice. Our AI will instantly draft custom emails, coding challenges, essays, or stories tailored to your requirements!
+                    </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-1 font-sans">
+                      <div className="flex items-center gap-2 text-[10px] text-on-surface-variant/70">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />
+                        <span>Unlimited custom generations</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] text-on-surface-variant/70">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />
+                        <span>Diagnostics & visual keyboards</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-baseline gap-1.5 py-1">
+                      <span className="text-2xl font-black text-primary">$5</span>
+                      <span className="text-[10px] font-bold text-on-surface-variant/40 uppercase">/ month (approx. 400 INR)</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 flex flex-col sm:flex-row items-center gap-3">
+                    <button
+                      onClick={handleUpgrade}
+                      disabled={checkoutLoading}
+                      className="w-full sm:w-auto px-6 py-3 bg-primary text-background hover:bg-primary/95 hover:scale-[1.01] rounded-lg text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center min-h-[40px] shrink-0 font-bold"
+                    >
+                      {checkoutLoading ? (
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      ) : user ? (
+                        "Upgrade to Pro"
                       ) : (
-                        <>
-                          <Sparkles className="w-3.5 h-3.5" />
-                          Generate Practice Text
-                        </>
+                        "Sign In to Upgrade"
                       )}
                     </button>
+                    <span className="text-[9px] text-on-surface-variant/35 uppercase tracking-wide leading-relaxed font-sans text-center sm:text-left">
+                      Or click one of the preset prompts or global feed items on the right to practice for free!
+                    </span>
                   </div>
-                </form>
-              </motion.div>
+                </motion.div>
+              )
             ) : testResult ? (
               // Results Display Card
               <motion.div
@@ -786,6 +1038,24 @@ export default function AIPractice() {
         </div>
 
       </aside>
+
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className={`fixed bottom-6 right-6 z-50 p-4 rounded-xl border border-white/8 flex items-center gap-3 shadow-2xl backdrop-blur-md ${
+              toast.type === 'success'
+                ? 'bg-correct/10 border-correct/30 text-correct'
+                : 'bg-error/10 border-error/30 text-error'
+            }`}
+          >
+            <div className="text-xs font-black tracking-wide">{toast.message}</div>
+            <button onClick={() => setToast(null)} className="text-[10px] font-black uppercase hover:opacity-75 transition-opacity">Close</button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

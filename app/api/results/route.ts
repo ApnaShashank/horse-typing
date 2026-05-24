@@ -27,6 +27,12 @@ export async function POST(request: Request) {
         }
       });
 
+      // Increment user's practiceRunsCount
+      await tx.user.update({
+        where: { id: session.userId },
+        data: { practiceRunsCount: { increment: 1 } },
+      });
+      
       // 2. Fetch the current stats to update them mathematically
       const stats = await tx.userStat.findUnique({ where: { userId: session.userId } });
       

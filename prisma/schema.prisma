@@ -13,6 +13,12 @@ model User {
   email     String   @unique
   password  String
   createdAt DateTime @default(now())
+  isPro     Boolean  @default(false)
+
+  // Tracking fields
+  aiPracticeCount   Int      @default(0)
+  completedLessons  Int[]
+  practiceRunsCount Int      @default(0)
 
   testResults  TestResult[]
   userStat     UserStat?
@@ -98,4 +104,11 @@ model AIGeneration {
   content   String
   category  String   @default("general")
   createdAt DateTime @default(now())
+}
+
+model SystemConfig {
+  id                            String @id @default(auto()) @map("_id") @db.ObjectId
+  freeAiLimit                   Int    @default(3)
+  freeLearnLimit                Int    @default(5)
+  freePracticeLimitBeforeLogin  Int    @default(3)
 }
