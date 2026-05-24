@@ -83,11 +83,12 @@ function filterWordsByKeys(allowedKeys: string[]): string[] {
  */
 export function generatePracticeText(lesson: Lesson, count: number = 40): string[] {
   const { allKeys, id } = lesson;
-  const normalizedKeys = allKeys.map(k => k.toLowerCase()).filter(k => k.length === 1 && /[a-z,./;']/.test(k));
+  // normalizedKeys is only used to filter the alphabetical word bank
+  const normalizedKeys = allKeys.map(k => k.toLowerCase()).filter(k => k.length === 1 && /[a-z]/.test(k));
 
-  // Very early lessons (L1-L9): pure key sequences only
+  // Very early lessons (L1-L9) or symbol/number lessons with few letters: pure key sequences of all allowed keys
   if (id <= 9 || normalizedKeys.length < 4) {
-    const seqs = generateKeySequences(normalizedKeys.length > 0 ? normalizedKeys : allKeys, count);
+    const seqs = generateKeySequences(allKeys, count);
     return seqs;
   }
 
@@ -95,7 +96,7 @@ export function generatePracticeText(lesson: Lesson, count: number = 40): string
   const matchedWords = filterWordsByKeys(normalizedKeys);
 
   if (matchedWords.length >= 5) {
-    // Mix real words with key sequences (70% real, 30% sequences)
+    // Mix real words with key sequences (75% real, 25% sequences)
     const result: string[] = [];
     const realCount = Math.floor(count * 0.75);
     const seqCount  = count - realCount;
@@ -109,15 +110,15 @@ export function generatePracticeText(lesson: Lesson, count: number = 40): string
       result.push(src[Math.floor(Math.random() * src.length)]);
     }
 
-    const seqs = generateKeySequences(normalizedKeys, seqCount);
+    const seqs = generateKeySequences(allKeys, seqCount);
     result.push(...seqs);
 
     // Shuffle
     return result.sort(() => Math.random() - 0.5);
   }
 
-  // Not enough real words — fall back to key sequences
-  return generateKeySequences(normalizedKeys.length > 0 ? normalizedKeys : allKeys, count);
+  // Not enough real words — fall back to key sequences of all allowed keys
+  return generateKeySequences(allKeys, count);
 }
 
 /**
