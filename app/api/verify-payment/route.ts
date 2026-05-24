@@ -30,6 +30,14 @@ export async function POST(req: Request) {
 
     const isValid = expectedSignature === razorpay_signature;
 
+    console.log("--- RAZORPAY VERIFICATION LOG ---");
+    console.log("Received Order ID:", razorpay_order_id);
+    console.log("Received Payment ID:", razorpay_payment_id);
+    console.log("Received Signature:", razorpay_signature);
+    console.log("Expected Signature:", expectedSignature);
+    console.log("Is Match:", isValid);
+    console.log("---------------------------------");
+
     if (!isValid) {
       return NextResponse.json({ error: 'Payment signature verification failed. Mismatch detected.' }, { status: 400 });
     }
