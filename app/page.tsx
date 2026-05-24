@@ -285,15 +285,57 @@ export default function Home() {
 
       {/* ─── Hero ──────────────────────────────────────────────── */}
       <section ref={heroRef} className="relative min-h-screen flex items-center pt-16 overflow-hidden">
-        {/* Background */}
-        <div className="absolute inset-0 -z-10">
+        {/* Beautiful Ambient Glow Background */}
+        <div className="absolute inset-0 -z-10 overflow-hidden">
+          {/* Main radial glow */}
           <div className="absolute inset-0" style={{
-            backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(150,150,150,0.08) 0%, transparent 60%)'
+            backgroundImage: 'radial-gradient(circle at 50% 30%, rgba(147, 51, 234, 0.07) 0%, rgba(79, 70, 229, 0.03) 30%, transparent 70%)'
           }} />
-          <div className="absolute inset-0" style={{
-            backgroundImage: 'linear-gradient(to right, var(--border-color, rgba(255,255,255,0.025)) 1px, transparent 1px), linear-gradient(to bottom, var(--border-color, rgba(255,255,255,0.025)) 1px, transparent 1px)',
-            backgroundSize: '40px 40px'
-          }} />
+          
+          {/* Animated Ambient Blob 1 */}
+          <motion.div
+            animate={{
+              scale: [1, 1.2, 1],
+              x: [0, 40, 0],
+              y: [0, -30, 0],
+            }}
+            transition={{
+              duration: 12,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="absolute top-[-10%] left-[10%] w-[350px] h-[350px] rounded-full bg-primary/4 blur-[120px] pointer-events-none"
+          />
+
+          {/* Animated Ambient Blob 2 */}
+          <motion.div
+            animate={{
+              scale: [1.2, 1, 1.2],
+              x: [0, -50, 0],
+              y: [0, 40, 0],
+            }}
+            transition={{
+              duration: 16,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="absolute bottom-[20%] right-[10%] w-[450px] h-[450px] rounded-full bg-indigo-500/4 blur-[130px] pointer-events-none"
+          />
+
+          {/* Animated Ambient Blob 3 */}
+          <motion.div
+            animate={{
+              scale: [1, 1.15, 1],
+              x: [0, 20, 0],
+              y: [0, 50, 0],
+            }}
+            transition={{
+              duration: 10,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="absolute top-[30%] left-[40%] w-[250px] h-[250px] rounded-full bg-purple-500/3 blur-[100px] pointer-events-none"
+          />
         </div>
 
         <motion.div
