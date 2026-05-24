@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion, useInView, useScroll, useTransform } from "framer-motion";
 import {
-  ArrowRight, Trophy, BarChart3, Zap, Target, Users, Clock, CheckCircle, ChevronDown
+  ArrowRight, Trophy, BarChart3, Zap, Target, Users, Clock, CheckCircle, ChevronDown,
+  Brain, Sparkles, Keyboard
 } from "lucide-react";
 
 // ─── Live Typing Demo ─────────────────────────────────────────────
@@ -116,33 +117,33 @@ export default function Home() {
   const features = [
     {
       icon: <BarChart3 className="w-5 h-5" />,
-      title: "Track every test",
-      desc: "Your WPM, accuracy, and consistency are logged automatically. See your progress chart from day one.",
+      title: "Detailed Progression Analytics",
+      desc: "Log your WPM, accuracy, and consistency automatically. Track your progress with advanced charts and historical test results.",
     },
     {
-      icon: <Target className="w-5 h-5" />,
-      title: "Practice what you miss",
-      desc: "We track which keys you mistype most and show you drills that target exactly those weak spots.",
+      icon: <Brain className="w-5 h-5" />,
+      title: "AI Performance Diagnostics",
+      desc: "Our AI Typing Coach analyzes your keystroke latency and finger reach to pinpoint weak spots and suggest matching curriculum lessons.",
     },
     {
-      icon: <Trophy className="w-5 h-5" />,
-      title: "Compete on the leaderboard",
-      desc: "Your best scores appear on the global rankings. Every real score is verified and only your personal best counts.",
-    },
-    {
-      icon: <Zap className="w-5 h-5" />,
-      title: "Multiple modes",
-      desc: "Choose from timed tests (15s, 30s, 60s), word count modes, quotes, or paste in your own custom text.",
-    },
-    {
-      icon: <Users className="w-5 h-5" />,
-      title: "Free account, all features",
-      desc: "Create an account to save history and appear on rankings. No paywall, no upsell — everything is free.",
+      icon: <Sparkles className="w-5 h-5" />,
+      title: "Custom AI Practice Generator",
+      desc: "Practice with custom text generated from prompt requests (e.g. resignation email, JS promise chains, SQL table joins). Customize and edit them on the fly.",
     },
     {
       icon: <Clock className="w-5 h-5" />,
-      title: "Learn from scratch",
-      desc: "New to touch typing? The Learn section walks you through home row keys step by step, building real muscle memory.",
+      title: "56 Step-by-Step Lessons",
+      desc: "A structured, complete touch-typing curriculum starting from simple home row keys to advanced numbers, brackets, and code symbols.",
+    },
+    {
+      icon: <Keyboard className="w-5 h-5" />,
+      title: "Premium Virtual Keyboards",
+      desc: "Train visual guidance with gorgeous, interactive keyboard styles including Standard, Neon, Glassmorphism, Retro, and Cyberpunk.",
+    },
+    {
+      icon: <Trophy className="w-5 h-5" />,
+      title: "Global Verified Standings",
+      desc: "Submit your results and match your speed against typists worldwide. The global leaderboard tracks and ranks verified personal bests.",
     },
   ];
 
@@ -515,6 +516,119 @@ export default function Home() {
             {faqs.map((faq, i) => (
               <FAQItem key={i} q={faq.q} a={faq.a} delay={i * 0.06} />
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Pricing Section ─────────────────────────────────────── */}
+      <section className="border-t border-white/5 py-28 relative overflow-hidden bg-black/10">
+        <div className="absolute inset-0 -z-10" style={{
+          backgroundImage: 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(150,150,150,0.02) 0%, transparent 70%)'
+        }} />
+        <div className="max-w-6xl mx-auto px-6 lg:px-10">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-16 text-center space-y-4"
+          >
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary/70">Membership Plans</p>
+            <h2 className="text-4xl md:text-5xl font-black tracking-tight font-['Manrope']">Simple, transparent pricing</h2>
+            <p className="text-on-surface-variant/50 text-sm max-w-md mx-auto">
+              Start practicing for free, or upgrade to Pro to unlock advanced AI coaching and generator tools.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
+            {/* Free Plan */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="grid-box p-8 bg-surface-container-low/40 border border-white/5 hover:border-white/10 rounded-2xl flex flex-col justify-between"
+            >
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-black uppercase text-on-surface-variant/70">Free Plan</h3>
+                  <p className="text-xs text-on-surface-variant/40 mt-1">Great for casual typists wanting to practice daily.</p>
+                </div>
+                <div className="flex items-baseline gap-1 text-on-surface font-headline">
+                  <span className="text-5xl font-black">$0</span>
+                  <span className="text-xs text-on-surface-variant/40 font-bold uppercase">/ forever</span>
+                </div>
+                <div className="h-px bg-white/5" />
+                <ul className="space-y-3.5 text-xs text-on-surface-variant/60 font-sans">
+                  {[
+                    "Unlimited Standard Practice runs",
+                    "Access to all 56 touch-typing Learn Lessons",
+                    "Live stats tracking (WPM, Accuracy, Consistency)",
+                    "Basic visual keyboard layout helpers",
+                    "Global leaderboard ranking submission",
+                  ].map(f => (
+                    <li key={f} className="flex items-center gap-3">
+                      <CheckCircle className="w-4 h-4 text-correct shrink-0" />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="mt-8">
+                <Link
+                  href="/practice"
+                  className="block w-full text-center px-6 py-3.5 border border-white/10 hover:border-white/20 hover:bg-white/4 rounded-lg text-xs font-bold text-on-surface transition-all duration-200"
+                >
+                  Start Typing For Free
+                </Link>
+              </div>
+            </motion.div>
+
+            {/* Pro Plan */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="grid-box p-8 bg-primary/[0.02] border border-primary/20 hover:border-primary/45 rounded-2xl flex flex-col justify-between relative shadow-xl shadow-primary/5"
+            >
+              <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 rounded-full bg-primary text-background text-[8px] font-black uppercase tracking-wider">
+                Most Popular
+              </div>
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-black uppercase text-primary">Pro Coach</h3>
+                  <p className="text-xs text-on-surface-variant/40 mt-1">Unlock AI diagnostics, custom prompts, and themes.</p>
+                </div>
+                <div className="flex items-baseline gap-1 text-primary font-headline">
+                  <span className="text-5xl font-black">$5</span>
+                  <span className="text-xs text-primary/50 font-bold uppercase">/ month</span>
+                </div>
+                <div className="h-px bg-white/5" />
+                <ul className="space-y-3.5 text-xs text-on-surface-variant/80 font-sans">
+                  {[
+                    "Everything in Free Plan",
+                    "Unlimited AI custom prompt generations",
+                    "AI Coach diagnostics (keystroke latency analysis)",
+                    "Interactive text editor to customize practice text",
+                    "All premium virtual keyboards (Neon, Cyberpunk, Glass, etc.)",
+                    "Developer-level coding templates and presets",
+                  ].map(f => (
+                    <li key={f} className="flex items-center gap-3">
+                      <CheckCircle className="w-4 h-4 text-primary shrink-0" />
+                      <span className="text-on-surface/90 font-medium">{f}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="mt-8">
+                <Link
+                  href="/register"
+                  className="block w-full text-center px-6 py-3.5 bg-primary text-background hover:bg-primary/90 rounded-lg text-xs font-black uppercase tracking-widest transition-all duration-200 shadow-md shadow-primary/10 hover:scale-[1.01]"
+                >
+                  Upgrade to Pro
+                </Link>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
