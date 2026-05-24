@@ -217,22 +217,47 @@ export default function Profile() {
     .filter(Boolean);
 
   return (
-    <main className="min-h-screen bg-background font-mono text-on-surface p-4 sm:p-6 lg:p-12 pt-24 max-w-6xl mx-auto selection:bg-primary/20">
+    <main className="min-h-screen bg-background font-mono text-on-surface p-4 sm:p-6 lg:p-12 pt-24 max-w-6xl mx-auto selection:bg-primary/20 relative">
+      {data.isPro && (
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[400px] -z-10 pointer-events-none overflow-hidden">
+          <div className="absolute top-[-20%] left-[20%] w-[500px] h-[350px] rounded-full bg-purple-500/10 blur-[130px]" />
+          <div className="absolute top-[-10%] right-[20%] w-[400px] h-[300px] rounded-full bg-pink-500/5 blur-[120px]" />
+        </div>
+      )}
       
       {/* ── Profile Header ── */}
       <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6 sm:gap-8 mb-12 px-2">
-         <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-surface-container-low border border-white/5 flex items-center justify-center text-primary relative overflow-hidden shadow-xl shrink-0">
-            <UserIcon className="w-12 h-12 sm:w-14 sm:h-14 relative z-10" />
-            <div className="absolute inset-0 bg-primary/5 animate-pulse"></div>
+         <div className={`w-24 h-24 sm:w-28 sm:h-28 rounded-2xl flex items-center justify-center relative overflow-hidden shadow-xl shrink-0 border ${
+            data.isPro
+              ? 'bg-gradient-to-tr from-purple-600 to-pink-600 border-purple-400 shadow-[0_0_25px_rgba(168,85,247,0.35)]'
+              : 'bg-surface-container-low border-white/5 text-primary'
+         }`}>
+            {data.isPro ? (
+              <span className="text-4xl relative z-10 drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]">👑</span>
+            ) : (
+              <UserIcon className="w-12 h-12 sm:w-14 sm:h-14 relative z-10" />
+            )}
+            <div className={`absolute inset-0 ${data.isPro ? 'bg-white/10' : 'bg-primary/5'} animate-pulse`}></div>
          </div>
          <div className="flex-grow space-y-2 text-center sm:text-left">
-            <h1 className="text-3xl sm:text-4xl font-black font-['Manrope'] tracking-tight text-on-surface uppercase">{data.name}</h1>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-center sm:justify-start gap-2.5">
+               <h1 className={`text-3xl sm:text-4xl font-black font-['Manrope'] tracking-tight uppercase ${
+                 data.isPro ? 'bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-400 bg-clip-text text-transparent drop-shadow-sm' : 'text-on-surface'
+               }`}>
+                 {data.name}
+               </h1>
+               {data.isPro && (
+                 <span className="inline-block self-center px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-[8px] font-black text-white uppercase tracking-widest border border-purple-400/30 shadow-[0_0_10px_rgba(168,85,247,0.2)]">
+                   Pro Member
+                 </span>
+               )}
+            </div>
             <div className="flex flex-wrap justify-center sm:justify-start items-center gap-3 sm:gap-4 text-on-surface-variant/40 text-[10px] sm:text-xs font-bold uppercase tracking-widest">
                <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> Joined {new Date(data.createdAt).toLocaleDateString()}</span>
                <span className="w-1.5 h-1.5 rounded-full bg-white/10 hidden sm:block"></span>
-               <span className="flex items-center gap-1.5 text-primary">
+               <span className={`flex items-center gap-1.5 ${data.isPro ? 'text-purple-400' : 'text-primary'}`}>
                  <Trophy className="w-3.5 h-3.5" /> 
-                 {stats.bestWpm >= 80 ? 'Legendary Typist' : stats.bestWpm >= 50 ? 'Pro Typist' : 'Novice Typist'}
+                 {data.isPro ? 'Ultimate Coach Mastery' : stats.bestWpm >= 80 ? 'Legendary Typist' : stats.bestWpm >= 50 ? 'Pro Typist' : 'Novice Typist'}
                </span>
             </div>
          </div>

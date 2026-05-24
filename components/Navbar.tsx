@@ -132,12 +132,33 @@ export default function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => setDropdownOpen(o => !o)}
-                  className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg border border-white/8 hover:border-white/15 bg-white/3 hover:bg-white/6 transition-all"
+                  className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg border transition-all ${
+                    user.isPro
+                      ? 'border-purple-500/50 hover:border-purple-500 bg-purple-500/5 shadow-[0_0_12px_rgba(168,85,247,0.12)]'
+                      : 'border-white/8 hover:border-white/15 bg-white/3 hover:bg-white/6'
+                  }`}
                 >
-                  <div className="w-6 h-6 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center">
-                    <UserIcon className="w-3 h-3 text-primary" />
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center relative ${
+                    user.isPro
+                      ? 'bg-gradient-to-tr from-purple-500 to-pink-500 shadow-[0_0_8px_rgba(168,85,247,0.4)]'
+                      : 'bg-primary/15 border border-primary/20'
+                  }`}>
+                    {user.isPro ? (
+                      <span className="text-[10px] font-black text-white leading-none">★</span>
+                    ) : (
+                      <UserIcon className="w-3 h-3 text-primary" />
+                    )}
                   </div>
-                  <span className="text-xs font-semibold text-on-surface/80 max-w-[100px] truncate">{user.name}</span>
+                  <span className={`text-xs font-semibold max-w-[100px] truncate ${
+                    user.isPro ? 'text-purple-300 font-bold' : 'text-on-surface/80'
+                  }`}>
+                    {user.name}
+                  </span>
+                  {user.isPro && (
+                    <span className="px-1.5 py-0.5 rounded bg-purple-500/20 text-[7px] font-black text-purple-300 uppercase tracking-widest border border-purple-500/30">
+                      Pro
+                    </span>
+                  )}
                   <ChevronDown className={`w-3.5 h-3.5 text-on-surface-variant/40 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 
@@ -150,8 +171,15 @@ export default function Navbar() {
                       transition={{ duration: 0.18 }}
                       className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-white/10 bg-[#161616] shadow-2xl shadow-black/50 overflow-hidden"
                     >
-                      <div className="px-4 py-3 border-b border-white/5">
-                        <p className="text-xs font-bold text-on-surface/80 truncate">{user.name}</p>
+                      <div className={`px-4 py-3 border-b border-white/5 ${user.isPro ? 'bg-gradient-to-r from-purple-950/20 to-transparent' : ''}`}>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-xs font-bold text-on-surface/80 truncate">{user.name}</p>
+                          {user.isPro && (
+                            <span className="px-1.5 py-0.5 rounded bg-purple-500/20 text-[7px] font-black text-purple-300 uppercase tracking-widest border border-purple-500/25">
+                              Pro Member
+                            </span>
+                          )}
+                        </div>
                         <p className="text-[10px] text-on-surface-variant/40 truncate mt-0.5">{user.email}</p>
                       </div>
                       <div className="p-1.5">
@@ -247,7 +275,14 @@ export default function Navbar() {
 
                 {user ? (
                   <div className="space-y-2">
-                    <p className="px-4 text-xs font-bold text-on-surface-variant/30 uppercase tracking-widest">{user.name}</p>
+                    <div className="px-4 py-1 flex items-center gap-2">
+                      <p className="text-xs font-bold text-on-surface-variant/30 uppercase tracking-widest">{user.name}</p>
+                      {user.isPro && (
+                        <span className="px-1.5 py-0.5 rounded bg-purple-500/20 text-[7px] font-black text-purple-300 uppercase tracking-widest border border-purple-500/25">
+                          Pro
+                        </span>
+                      )}
+                    </div>
                     <Link href="/profile" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-on-surface-variant/60 hover:bg-white/4 hover:text-on-surface transition-colors">
                       <Activity className="w-4 h-4" /> My stats
                     </Link>

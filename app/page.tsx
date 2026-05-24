@@ -345,7 +345,16 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Left */}
             <div>
-
+              {user && user.isPro && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/25 text-[10px] font-black text-purple-300 uppercase tracking-widest mb-6"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping" />
+                  Pro Coach Active
+                </motion.div>
+              )}
 
               <motion.h1
                 initial={{ opacity: 0, y: 24 }}
@@ -690,13 +699,18 @@ export default function Home() {
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mb-16 text-center space-y-4"
+            className="mb-16 text-center space-y-4 flex flex-col items-center"
           >
             <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary/70">Membership Plans</p>
             <h2 className="text-4xl md:text-5xl font-black tracking-tight font-['Manrope']">Simple, transparent pricing</h2>
             <p className="text-on-surface-variant/50 text-sm max-w-md mx-auto">
               Start practicing for free, or upgrade to Pro to unlock advanced AI coaching and generator tools.
             </p>
+            {user && user.isPro && (
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-[10px] font-black text-purple-300 uppercase tracking-widest animate-pulse mt-2">
+                ✨ Pro Coach Plan is active on your account
+              </div>
+            )}
           </motion.div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
@@ -749,10 +763,18 @@ export default function Home() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
-              className="grid-box p-8 bg-primary/[0.02] border border-primary/20 hover:border-primary/45 rounded-2xl flex flex-col justify-between relative shadow-xl shadow-primary/5 max-w-md mx-auto md:max-w-none w-full"
+              className={`grid-box p-8 rounded-2xl flex flex-col justify-between relative shadow-xl w-full max-w-md mx-auto md:max-w-none transition-all ${
+                user && user.isPro
+                  ? 'bg-purple-950/10 border-purple-500/50 shadow-purple-500/10 ring-1 ring-purple-500/30'
+                  : 'bg-primary/[0.02] border-primary/20 hover:border-primary/45 shadow-primary/5'
+              }`}
             >
-              <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 rounded-full bg-primary text-background text-[8px] font-black uppercase tracking-wider">
-                Most Popular
+              <div className={`absolute top-0 right-6 -translate-y-1/2 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-wider ${
+                user && user.isPro
+                  ? 'bg-purple-500 text-white'
+                  : 'bg-primary text-background'
+              }`}>
+                {user && user.isPro ? 'Active Plan' : 'Most Popular'}
               </div>
               <div className="space-y-6">
                 <div>
