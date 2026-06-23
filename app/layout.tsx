@@ -23,9 +23,16 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://horsetyping.vercel.app"),
-  title: "Horse Typing | Type Faster, Learn Smarter",
-  description: "A refined touch-typing environment for high-performance typists. Practice in English and Hindi InScript, customize keyboard guides, analyze your stats, and race to the top of the leaderboard.",
-  keywords: ["typing practice", "typing test", "hindi typing", "inscript typing", "touch typing", "keyboard speed test", "typing tutor", "horse typing", "wpm test"],
+  title: {
+    default: "Horse Typing | Free Touch Typing Test & Practice",
+    template: "%s | Horse Typing"
+  },
+  description: "Improve your touch typing with Horse Typing. Practice in English and Hindi InScript, customize virtual keyboards, track real-time WPM/accuracy, view analytics, and rank on the global leaderboard.",
+  keywords: [
+    "typing practice", "typing test", "hindi typing", "inscript typing", "touch typing", 
+    "keyboard speed test", "typing tutor", "horse typing", "wpm test", "learn touch typing",
+    "speed typing", "keyboard test", "free typing tutor", "hindi keyboard practice"
+  ],
   authors: [{ name: "ApnaShashank" }],
   icons: {
     icon: "https://ik.imagekit.io/DEMOPROJECT/3c470dc2-3a50-4f45-9960-deb3429114e8.png",
@@ -33,8 +40,8 @@ export const metadata: Metadata = {
     apple: "https://ik.imagekit.io/DEMOPROJECT/3c470dc2-3a50-4f45-9960-deb3429114e8.png",
   },
   openGraph: {
-    title: "Horse Typing | Type Faster, Learn Smarter",
-    description: "Refined touch-typing environment with English and Hindi InScript support, visual keyboard guides, rich settings, and detailed analytics.",
+    title: "Horse Typing | Free Touch Typing Test & Practice",
+    description: "Improve your touch typing with English and Hindi InScript support, visual keyboard guides, rich settings, and detailed analytics.",
     url: "https://horsetyping.vercel.app",
     siteName: "Horse Typing",
     images: [
@@ -50,8 +57,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "Horse Typing | Type Faster, Learn Smarter",
-    description: "Refined touch-typing environment with English and Hindi InScript support, visual keyboard guides, rich settings, and detailed analytics.",
+    title: "Horse Typing | Free Touch Typing Test & Practice",
+    description: "Improve your touch typing with English and Hindi InScript support, visual keyboard guides, rich settings, and detailed analytics.",
     images: ["https://ik.imagekit.io/DEMOPROJECT/3c470dc2-3a50-4f45-9960-deb3429114e8.png"],
   },
 };

@@ -52,8 +52,11 @@ export default function Footer() {
       { label: 'My stats', href: '/profile' },
     ],
     legal: [
-      { label: 'Privacy', href: '#' },
-      { label: 'Terms', href: '#' },
+      { label: 'Privacy Policy', href: '/privacy' },
+      { label: 'Terms & Conditions', href: '/terms' },
+      { label: 'Refund Policy', href: '/refund' },
+      { label: 'Shipping & Delivery', href: '/shipping' },
+      { label: 'Contact Us', href: '/contact' },
     ],
   };
 
@@ -80,13 +83,13 @@ export default function Footer() {
               {[
                 { href: 'https://github.com', icon: <GithubIcon className="w-4 h-4" />, label: 'GitHub' },
                 { href: 'https://twitter.com', icon: <TwitterIcon className="w-4 h-4" />, label: 'Twitter' },
-                { href: '#', icon: <Mail className="w-4 h-4" />, label: 'Email' },
+                { href: 'mailto:apna.shashank.dev@gmail.com', icon: <Mail className="w-4 h-4" />, label: 'Email' },
               ].map(s => (
                 <a
                   key={s.label}
                   href={s.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  target={s.href.startsWith('mailto:') ? undefined : '_blank'}
+                  rel={s.href.startsWith('mailto:') ? undefined : 'noopener noreferrer'}
                   aria-label={s.label}
                   className="w-8 h-8 flex items-center justify-center rounded-lg border border-white/8 text-on-surface-variant/40 hover:text-on-surface/80 hover:border-white/20 hover:bg-white/4 transition-all"
                 >
